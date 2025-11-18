@@ -1,145 +1,84 @@
-# LKW Bot Platform
+from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask_login import login_user, logout_user, current_user
+from models import db
+from models.user import User
+from forms import LoginForm, RegistrationForm
 
-Multi-User Bot-Plattform für automatisierten LKW-Bot mit Abo-System.
+bp = Blueprint('auth', __name__, url_prefix='/auth')
 
-## Projektstruktur
 
-```
-lkw_bot_platform/
-├── app.py                          # Hauptanwendung (Flask)
-├── config.py                       # Konfiguration
-├── requirements.txt                # Python Dependencies
-├── .env.example                    # Environment Template
-├── models/                         # Datenbank-Models
-│   ├── user.py                     # User Model
-│   ├── subscription.py             # Abo & License Keys
-│   └── bot_config.py               # Bot-Einstellungen & Logs
-├── routes/                         # Flask Blueprints
-│   ├── auth.py                     # Login/Register (TODO)
-│   ├── admin.py                    # Admin Dashboard (TODO)
-│   ├── dashboard.py                # User Dashboard (TODO)
-│   └── bot.py                      # Bot Steuerung (TODO)
-├── bot_manager/                    # Bot Logic
-│   ├── lkw_bot.py                  # LKW Bot (TODO)
-│   └── bot_controller.py           # Multi-User Management (TODO)
-├── templates/                      # HTML Templates
-└── static/                         # CSS/JS
-```
+@bp.route('/login', methods=['GET', 'POST'])
+def login():
+    """Login page"""
+    # Redirect if already logged in
+    if current_user.is_authenticated:
+        if current_user.is_admin:
+            return redirect(url_for('admin.dashboard'))
+        return redirect(url_for('dashboard.index'))
+    
+    form = LoginForm()
+    
+    if form.validate_on_submit():
+        # Find user by email (case-insensitive)
+        user = User.query.filter_by(email=form.email.data.lower()).first()
+        
+        # Check if user exists and password is correct
+        if user and user.check_password(form.password.data):
+            # Check if account is active
+            if not user.is_active:
+                flash('Your account has been suspended. Please contact support.', 'error')
+                return redirect(url_for('auth.login'))
+            
+            # Login user
+            login_user(user, remember=form.remember_me.data)
+            user.update_last_login()
+            
+            flash(f'Welcome back, {user.email}!', 'success')
+            
+            # Redirect to next page or dashboard
+            next_page = request.args.get('next')
+            if next_page:
+                return redirect(next_page)
+            
+            # Redirect based on role
+            if user.is_admin:
+                return redirect(url_for('admin.dashboard'))
+            return redirect(url_for('dashboard.index'))
+        else:
+            flash('Invalid email or password. Please try again.', 'error')
+    
+    return render_template('auth/login.html', form=form)
 
-## Features
 
-### ✅ Schritt 1: Fundament (FERTIG)
-- [x] Projektstruktur
-- [x] Datenbank-Models (User, Subscription, Keys, BotConfig, Timer, Logs)
-- [x] Basis-Konfiguration
-- [x] Flask App Setup
+@bp.route('/register', methods=['GET', 'POST'])
+def register():
+    """Registration page"""
+    # Redirect if already logged in
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard.index'))
+    
+    form = RegistrationForm()
+    
+    if form.validate_on_submit():
+        # Create new user
+        user = User(
+            email=form.email.data.lower(),
+            is_active=True
+        )
+        user.set_password(form.password.data)
+        
+        db.session.add(user)
+        db.session.commit()
+        
+        flash('Account created successfully! You can now log in.', 'success')
+        return redirect(url_for('auth.login'))
+    
+    return render_template('auth/register.html', form=form)
 
-### ⏳ Schritt 2: Authentifizierung (TODO)
-- [ ] Login-System
-- [ ] Registrierung
-- [ ] Session-Management
-- [ ] Templates
 
-### ⏳ Schritt 3: Admin-Bereich (TODO)
-- [ ] Admin-Dashboard
-- [ ] Key-Generator
-- [ ] User-Management
-- [ ] Wartungsmodus
-
-### ⏳ Schritt 4: User-Dashboard (TODO)
-- [ ] Persönliches Dashboard
-- [ ] Abo-Status
-- [ ] Bot-Konfiguration
-
-### ⏳ Schritt 5: Bot-Integration (TODO)
-- [ ] Multi-User Bot-Controller
-- [ ] Bot Start/Stop
-- [ ] Timer-Persistenz
-- [ ] Log-Anzeige
-
-### ⏳ Schritt 6: Deployment (TODO)
-- [ ] VPS Setup
-- [ ] Nginx/Apache
-- [ ] Systemd Service
-
-## Installation
-
-### 1. Repository klonen / Dateien hochladen
-
-### 2. Virtual Environment erstellen
-```bash
-python3 -m venv venv
-source venv/bin/activate  # Linux/Mac
-# oder
-venv\Scripts\activate  # Windows
-```
-
-### 3. Dependencies installieren
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Environment konfigurieren
-```bash
-cp .env.example .env
-# .env editieren und SECRET_KEY ändern!
-```
-
-### 5. Datenbank initialisieren
-```bash
-python app.py
-# Erstellt lkw_bot.db und Admin-User
-```
-
-### 6. Anwendung starten
-```bash
-python app.py
-```
-
-Öffne Browser: `http://localhost:5000`
-
-## Standard Admin-Login
-```
-E-Mail: admin@lkwbot.de
-Passwort: admin123
-```
-**⚠️ WICHTIG: Ändere das Admin-Passwort sofort nach dem ersten Login!**
-
-## Datenbank-Schema
-
-### Users
-- E-Mail, Passwort, Admin-Status, Aktiv-Status
-
-### Subscriptions
-- User-ID, Ablaufdatum, Erstellungsdatum
-
-### LicenseKeys
-- Key-Code, Laufzeit, Eingelöst-Status, Ersteller
-
-### BotConfigs
-- SSH-Daten (VMOSCloud), Screen-Settings, Bot-Einstellungen
-
-### BotTimers
-- Timer-Name, Nächster Run, Interval, Aktiv-Status
-
-### BotLogs
-- Log-Type, Nachricht, Zeitstempel
-
-## Nächste Schritte
-
-**Schritt 2:** Authentifizierung implementieren
-- Login/Register Routes
-- WTForms für Formulare
-- Templates erstellen
-
-## Technologien
-
-- **Backend:** Flask 3.0
-- **Database:** SQLAlchemy (SQLite/PostgreSQL)
-- **Auth:** Flask-Login
-- **Frontend:** Bootstrap 5 + Vanilla JS (geplant)
-- **Bot:** OpenCV, Tesseract, Paramiko
-
-## Lizenz
-
-Privates Projekt - Alle Rechte vorbehalten
+@bp.route('/logout')
+def logout():
+    """Logout user"""
+    logout_user()
+    flash('You have been logged out successfully.', 'info')
+    return redirect(url_for('auth.login'))

@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Register - LKW Bot{% endblock %}
+
+{% block body %}
+<div class="min-h-screen flex items-center justify-center p-4 py-12">
+    <div class="max-w-md w-full">
+        
+        <!-- Logo/Header -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-primary-600 rounded-xl mb-4">
+                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+            </div>
+            <h1 class="text-4xl font-bold text-slate-900">Create Account</h1>
+            <p class="text-slate-600 mt-2">Join us and start automating your game!</p>
+        </div>
+        
+        <!-- Register Card -->
+        <div class="bg-white rounded-xl shadow-xl p-8">
+            <form method="POST" action="{{ url_for('auth.register') }}">
+                {{ form.hidden_tag() }}
+                
+                <!-- Email Field -->
+                <div class="mb-6">
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">
+                        Email Address
+                    </label>
+                    {{ form.email(class="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all" + (" border-red-500" if form.email.errors else ""), placeholder="your@email.com") }}
+                    {% if form.email.errors %}
+                        {% for error in form.email.errors %}
+                        <p class="text-red-500 text-sm mt-1">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                
+                <!-- Password Field -->
+                <div class="mb-6">
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">
+                        Password
+                    </label>
+                    {{ form.password(class="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all" + (" border-red-500" if form.password.errors else ""), placeholder="••••••••") }}
+                    {% if form.password.errors %}
+                        {% for error in form.password.errors %}
+                        <p class="text-red-500 text-sm mt-1">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                    <p class="text-xs text-slate-500 mt-1">Minimum 8 characters</p>
+                </div>
+                
+                <!-- Confirm Password Field -->
+                <div class="mb-6">
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">
+                        Confirm Password
+                    </label>
+                    {{ form.password_confirm(class="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all" + (" border-red-500" if form.password_confirm.errors else ""), placeholder="••••••••") }}
+                    {% if form.password_confirm.errors %}
+                        {% for error in form.password_confirm.errors %}
+                        <p class="text-red-500 text-sm mt-1">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                
+                <!-- Info Box -->
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-blue-800">
+                                After registration, you'll need a license key to activate your bot. 
+                                Contact us for pricing and activation.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Submit Button -->
+                {{ form.submit(class="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all cursor-pointer") }}
+            </form>
+        </div>
+        
+        <!-- Login Link -->
+        <p class="text-center text-slate-600 text-sm mt-6">
+            Already have an account? 
+            <a href="{{ url_for('auth.login') }}" class="text-primary-600 hover:text-primary-700 font-semibold">
+                Login here
+            </a>
+        </p>
+        
+    </div>
+</div>
+{% endblock %}

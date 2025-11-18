@@ -2,6 +2,7 @@ import os
 from flask import Flask, render_template, redirect, url_for
 from config import config
 from models import db, login_manager
+from flask_session import Session
 
 
 def create_app(config_name=None):
@@ -12,6 +13,10 @@ def create_app(config_name=None):
     
     app = Flask(__name__)
     app.config.from_object(config[config_name])
+
+    app.config['SESSION_TYPE'] = 'filesystem'
+    app.config['SESSION_FILE_DIR'] = '/tmp/flask_session'
+    Session(app)
     
     # Initialize extensions
     db.init_app(app)

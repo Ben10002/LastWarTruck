@@ -26,12 +26,11 @@ def create_app(config_name=None):
         from models.user import User
         return User.query.get(int(user_id))
     
-    # Register Blueprints (später)
-    # from routes import auth, admin, dashboard, bot
-    # app.register_blueprint(auth.bp)
-    # app.register_blueprint(admin.bp)
-    # app.register_blueprint(dashboard.bp)
-    # app.register_blueprint(bot.bp)
+    # Register Blueprints
+    from routes import auth, admin, dashboard
+    app.register_blueprint(auth.bp)
+    app.register_blueprint(admin.bp)
+    app.register_blueprint(dashboard.bp)
     
     # Home Route
     @app.route('/')

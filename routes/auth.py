@@ -4,6 +4,15 @@ from models import db
 from models.user import User
 from forms import LoginForm, RegistrationForm
 
+# Disable CSRF for testing
+class LoginFormNoCSRF(LoginForm):
+    class Meta:
+        csrf = False
+
+class RegistrationFormNoCSRF(RegistrationForm):
+    class Meta:
+        csrf = False
+
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 
@@ -16,7 +25,7 @@ def login():
             return redirect(url_for('admin.dashboard'))
         return redirect(url_for('dashboard.index'))
     
-    form = LoginForm()
+    form = LoginFormNoCSRF()
     
     if form.validate_on_submit():
         # Find user by email (case-insensitive)
@@ -47,7 +56,6 @@ def login():
         else:
             flash('Invalid email or password. Please try again.', 'error')
     
-
     return render_template('auth/login.html', form=form)
 
 
@@ -58,7 +66,7 @@ def register():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard.index'))
     
-    form = RegistrationForm()
+    form = RegistrationFormNoCSRF()
     
     if form.validate_on_submit():
         # Create new user

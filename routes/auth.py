@@ -47,8 +47,7 @@ def login():
         else:
             flash('Invalid email or password. Please try again.', 'error')
     
-    if form.errors:
-        print("FORM ERRORS:", form.errors)
+
     return render_template('auth/login.html', form=form)
 
 

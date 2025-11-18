@@ -18,7 +18,7 @@ class Config:
     SESSION_COOKIE_SAMESITE = 'Lax'
     
     # Admin
-    ADMIN_EMAIL = 'admin@lkwbot.com'  # Change this later
+    ADMIN_EMAIL = 'leerzeichen183@gmail.com'  # Change this later
     
     # Bot
     BOT_DEFAULT_SCREEN_WIDTH = 720

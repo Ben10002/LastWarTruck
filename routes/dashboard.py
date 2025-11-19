@@ -7,6 +7,7 @@ from models.subscription import Subscription
 from models.bot_config import BotConfig, BotLog
 from models.bot_schedule import BotSchedule
 from datetime import datetime
+from models.bot_config import BotConfig, BotLog, BotTimer
 
 bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
 
@@ -105,9 +106,9 @@ def start_bot():
     if bot_config.is_running:
         return redirect(url_for('dashboard.index', error='already_running'))
     
-    # Start bot (will implement later)
-    bot_config.is_running = True
-    bot_config.last_started = datetime.utcnow()
+    # Start bot by creating a new timer
+    new_timer = BotTimer(user_id=user.id)
+    db.session.add(new_timer)
     db.session.commit()
     
     BotLog.add_log(user.id, 'info', 'Bot started')

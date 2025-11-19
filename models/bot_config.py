@@ -41,9 +41,6 @@ class BotConfig(db.Model):
     # Relationship
     user = db.relationship('User', backref=db.backref('bot_config', uselist=False))
     
-    def __repr__(self):
-        return f'<BotConfig User:{self.user_id}>'
-    
     @property
     def is_configured(self):
         """Check if bot is fully configured (by admin)"""
@@ -85,6 +82,9 @@ class BotConfig(db.Model):
             self.adb_proxy_port = int(port_forward_match.group(2))
         
         return True
+    
+    def __repr__(self):
+        return f'<BotConfig User:{self.user_id}>'
 
 
 class BotTimer(db.Model):
@@ -101,9 +101,6 @@ class BotTimer(db.Model):
     # Relationship
     user = db.relationship('User', backref=db.backref('bot_timers', lazy='dynamic'))
     
-    def __repr__(self):
-        return f'<BotTimer User:{self.user_id} Started:{self.started_at}>'
-    
     @property
     def duration_minutes(self):
         """Get duration in minutes"""
@@ -117,6 +114,9 @@ class BotTimer(db.Model):
     def is_running(self):
         """Check if timer is still running"""
         return self.stopped_at is None
+    
+    def __repr__(self):
+        return f'<BotTimer User:{self.user_id} Started:{self.started_at}>'
 
 
 class BotLog(db.Model):
@@ -134,9 +134,6 @@ class BotLog(db.Model):
     # Relationship
     user = db.relationship('User', backref=db.backref('bot_logs', lazy='dynamic'))
     
-    def __repr__(self):
-        return f'<BotLog {self.level}: {self.message[:50]}>'
-    
     @staticmethod
     def add_log(user_id, level, message):
         """Helper method to add log entry"""
@@ -144,3 +141,6 @@ class BotLog(db.Model):
         db.session.add(log)
         db.session.commit()
         return log
+    
+    def __repr__(self):
+        return f'<BotLog {self.level}: {self.message[:50]}>'

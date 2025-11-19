@@ -237,7 +237,7 @@
             <div class="p-6 bg-slate-900 max-h-96 overflow-y-auto font-mono text-sm">
                 {% for log in bot_logs %}
                 <div class="mb-2 {% if log.log_type == 'error' %}text-red-400{% elif log.log_type == 'success' %}text-green-400{% elif log.log_type == 'warning' %}text-yellow-400{% else %}text-slate-300{% endif %}">
-                    <span class="text-slate-500">[{{ log.created_at.strftime('%H:%M:%S') }}]</span>
+                    <span class="text-slate-500">[{{ log.timestamp.strftime('%H:%M:%S') }}]</span>
                     <span class="font-semibold">[{{ log.log_type.upper() }}]</span>
                     {{ log.message }}
                 </div>

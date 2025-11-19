@@ -105,19 +105,17 @@ def start_bot():
     if bot_config.is_running:
         return redirect(url_for('dashboard.index', error='already_running'))
     
-    # Start bot by creating a new timer
-    new_timer = BotTimer(user_id=user.id)
-    db.session.add(new_timer)
-    db.session.commit()
-    
     # Start bot worker in background thread
     import threading
     from bot_worker import VMOSCloudBot
+    from flask import current_app
     
     def run_bot():
-        bot = VMOSCloudBot(user.id)
-        if bot.start():
-            bot.run()
+        # Push app context for this thread
+        with current_app.app_context():
+            bot = VMOSCloudBot(user.id)
+            if bot.start():
+                bot.run()
     
     bot_thread = threading.Thread(target=run_bot, daemon=True)
     bot_thread.start()

@@ -80,7 +80,7 @@ def register():
         db.session.commit()
         
         flash('Account created successfully! You can now log in.', 'success')
-        return redirect(url_for('auth.login'))
+        return redirect(url_for('auth.login', registered='true'))
     
     return render_template('auth/register.html', form=form)
 

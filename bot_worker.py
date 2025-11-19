@@ -275,20 +275,35 @@ class VMOSCloudBot:
             strength_img = screenshot[strength_region[1]:strength_region[3], strength_region[0]:strength_region[2]]
             strength_text = pytesseract.image_to_string(strength_img, config='--psm 7')
             
+            # DEBUG: Log raw OCR output
+            print(f"[DEBUG] Strength OCR raw text: '{strength_text}'")
+            
             # Extract number (e.g., "65.5M" -> 65.5)
             strength_match = re.search(r'([\d.]+)', strength_text)
             if strength_match:
                 info['strength'] = float(strength_match.group(1))
+                print(f"[DEBUG] Parsed strength: {info['strength']}")
+            else:
+                print(f"[DEBUG] Could not parse strength from: '{strength_text}'")
             
             # Read server
             server_region = self.OCR_REGIONS['server']
             server_img = screenshot[server_region[1]:server_region[3], server_region[0]:server_region[2]]
             server_text = pytesseract.image_to_string(server_img, config='--psm 7')
             
+            # DEBUG: Log raw OCR output
+            print(f"[DEBUG] Server OCR raw text: '{server_text}'")
+            
             # Extract number (e.g., "#49" -> 49)
             server_match = re.search(r'#?(\d+)', server_text)
             if server_match:
                 info['server'] = int(server_match.group(1))
+                print(f"[DEBUG] Parsed server: {info['server']}")
+            else:
+                print(f"[DEBUG] Could not parse server from: '{server_text}'")
+            
+            print(f"[DEBUG] Final truck_info: {info}")
+            print(f"[DEBUG] User's strength limit: {self.config.truck_strength}")
             
             return info
             

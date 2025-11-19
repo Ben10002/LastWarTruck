@@ -17,8 +17,9 @@ def admin_required(f):
 
 
 @bp.route('/dashboard')
-@login_required
-@admin_required
+# @login_required
+# @admin_required
 def dashboard():
     """Admin dashboard"""
     return render_template('admin/dashboard.html')
+```

@@ -51,7 +51,7 @@ class VMOSCloudBot:
             'share_alliance_confirm': (400, 750),  # Confirm send in alliance chat
         }
         
-       # OCR regions (L, top, R, bottom) for reading truck info
+        # OCR regions (L, top, R, bottom) for reading truck info
         self.OCR_REGIONS = {
             'strength': (240, 970, 340, 1005),  # Moved further right to avoid icon
             'server': (180, 870, 240, 910),  # Server number box
@@ -132,13 +132,23 @@ class VMOSCloudBot:
         try:
             self.log("Setting up SSH tunnel...")
             
-            # Kill any existing tunnels on this port first
+            # Kill any existing tunnels on this port first - AGGRESSIVELY
             self.log("Cleaning up old tunnels...")
-            subprocess.run(['pkill', '-f', f'{self.config.local_adb_port}:adb-proxy'], 
+            
+            # Kill by port
+            subprocess.run(['pkill', '-9', '-f', f'{self.config.local_adb_port}:adb-proxy'], 
                          capture_output=True)
+            
+            # Kill all SSH to this host
+            subprocess.run(['pkill', '-9', '-f', f'{self.config.ssh_username}'], 
+                         capture_output=True)
+            
+            # Disconnect ADB
             subprocess.run(['adb', 'disconnect', self.device],
                          capture_output=True)
-            time.sleep(1)
+            
+            # Wait longer for cleanup
+            time.sleep(3)
             
             # Build SSH command
             ssh_cmd = [
@@ -148,6 +158,8 @@ class VMOSCloudBot:
                 '-oHostKeyAlgorithms=+ssh-rsa',
                 '-oStrictHostKeyChecking=no',
                 '-oUserKnownHostsFile=/dev/null',
+                '-oServerAliveInterval=60',
+                '-oServerAliveCountMax=3',
                 self.config.ssh_username,
                 '-p', str(self.config.ssh_port),
                 '-L', f'{self.config.local_adb_port}:adb-proxy:{self.config.adb_proxy_port}',
@@ -159,7 +171,7 @@ class VMOSCloudBot:
                 ssh_cmd,
                 capture_output=True,
                 text=True,
-                timeout=15
+                timeout=20
             )
             
             if result.returncode != 0:
@@ -233,6 +245,9 @@ class VMOSCloudBot:
             result = cv2.matchTemplate(screenshot, template, cv2.TM_CCOEFF_NORMED)
             min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
             
+            # DEBUG
+            print(f"[DEBUG] Template match confidence: {max_val:.4f} (threshold: 0.50)")
+            
             # Threshold (lowered for testing)
             threshold = 0.50
             if max_val >= threshold:
@@ -244,6 +259,7 @@ class VMOSCloudBot:
                 self.log(f"Truck found", 'success')
                 return (center_x, center_y)
             else:
+                print(f"[DEBUG] No truck found, best match was {max_val:.2%}")
                 return None  # No log needed, happens often
                 
         except Exception as e:
@@ -283,14 +299,23 @@ class VMOSCloudBot:
             # Clean up text: remove spaces, replace comma with dot
             strength_text_clean = strength_text.strip().replace(' ', '').replace(',', '.')
             
-            # Extract all numbers and concatenate (e.g., "73.2M" or "9.73M")
-            # Find pattern like "73.2M" or "9.73M"
-            strength_match = re.search(r'(\d+\.?\d*)M', strength_text_clean, re.IGNORECASE)
+            # Remove any leading digits before the main number
+            # Pattern: find the LAST number before 'M' (e.g., "973.7M" -> want "73.7M")
+            strength_match = re.search(r'(\d{1,3}\.?\d*)M', strength_text_clean, re.IGNORECASE)
             if strength_match:
                 info['strength'] = float(strength_match.group(1))
                 print(f"[DEBUG] Parsed strength: {info['strength']}M from '{strength_text}' -> '{strength_text_clean}'")
             else:
-                print(f"[DEBUG] Could not parse strength from: '{strength_text}' -> '{strength_text_clean}'")
+                # Try without M suffix
+                strength_match = re.search(r'(\d{1,3}\.?\d*)', strength_text_clean)
+                if strength_match:
+                    # Take the LAST match (rightmost number)
+                    all_matches = re.findall(r'(\d{1,3}\.?\d*)', strength_text_clean)
+                    if all_matches:
+                        info['strength'] = float(all_matches[-1])
+                        print(f"[DEBUG] Parsed strength (no M): {info['strength']}M from '{strength_text}' -> '{strength_text_clean}'")
+                else:
+                    print(f"[DEBUG] Could not parse strength from: '{strength_text}' -> '{strength_text_clean}'")
             
             # Read server
             server_region = self.OCR_REGIONS['server']

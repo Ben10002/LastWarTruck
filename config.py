@@ -16,10 +16,13 @@ class Config:
     
     # Session
     PERMANENT_SESSION_LIFETIME = timedelta(days=7)
-    SESSION_COOKIE_SECURE = False  # Set to True with HTTPS
+    SESSION_COOKIE_SECURE = False
     SESSION_COOKIE_HTTPONLY = True
-    SESSION_COOKIE_SAMESITE = None
-    SESSION_COOKIE_DOMAIN = None    # Add this line
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_DOMAIN = None
+    REMEMBER_COOKIE_HTTPONLY = True
+    REMEMBER_COOKIE_SECURE = False
+    REMEMBER_COOKIE_SAMESITE = 'Lax'
     
     # Admin
     ADMIN_EMAIL = 'leerzeichen183@gmail.com'  # Change this later

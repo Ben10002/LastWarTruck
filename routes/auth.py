@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, session
 from flask_login import login_user, logout_user, current_user
 from models import db
 from models.user import User
@@ -80,6 +80,8 @@ def register():
         db.session.commit()
         
         flash('Account created successfully! You can now log in.', 'success')
+        print("DEBUG: Flash message added to session")
+        print("DEBUG: Session contents:", dict(session))
         return redirect(url_for('auth.login', registered='true'))
     
     return render_template('auth/register.html', form=form)

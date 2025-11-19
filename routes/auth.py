@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, session
 from flask_login import login_user, logout_user, current_user
 from models import db
 from models.user import User
@@ -41,6 +41,10 @@ def login():
             # Login user
             login_user(user, remember=form.remember_me.data)
             user.update_last_login()
+            
+            # FORCE session to save
+            session.modified = True
+            db.session.commit()
             
             # Redirect to next page or dashboard
             next_page = request.args.get('next')

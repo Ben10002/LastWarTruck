@@ -16,28 +16,18 @@ def admin_required(f):
         user_id = request.cookies.get('user_id')
         is_admin_cookie = request.cookies.get('is_admin')
         
-        print(f"DEBUG: user_id from cookie = {user_id}")
-        print(f"DEBUG: is_admin from cookie = {is_admin_cookie}")
-        print(f"DEBUG: All cookies = {dict(request.cookies)}")
-        
         if user_id and is_admin_cookie == 'True':
             user = User.query.get(int(user_id))
             if user and user.is_admin:
-                print(f"DEBUG: Access granted via cookie for user {user.email}")
                 return f(*args, **kwargs)
         
         # Fallback to session
         user_id_session = session.get('user_id')
         is_admin_session = session.get('is_admin')
         
-        print(f"DEBUG: user_id from session = {user_id_session}")
-        print(f"DEBUG: is_admin from session = {is_admin_session}")
-        
         if user_id_session and is_admin_session:
-            print(f"DEBUG: Access granted via session")
             return f(*args, **kwargs)
         
-        print(f"DEBUG: Access denied - no valid auth")
         abort(403)
     return decorated_function
 

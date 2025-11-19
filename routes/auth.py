@@ -41,23 +41,19 @@ def login():
             session['auth_token'] = auth_token
             session.permanent = True
             
-            print(f"DEBUG LOGIN: Setting cookies for user {user.id}")
-            
             user.update_last_login()
             db.session.commit()
             
-            # Redirect with token in URL
+            # Redirect with cookies
             if user.is_admin:
                 response = redirect(url_for('admin.dashboard'))
             else:
                 response = redirect(url_for('dashboard.index'))
             
-            # Set cookie manually with max compatibility
+            # Set authentication cookies
             response.set_cookie('auth_token', auth_token, max_age=3600, httponly=False, samesite=None)
             response.set_cookie('user_id', str(user.id), max_age=3600, httponly=False, samesite=None)
             response.set_cookie('is_admin', str(user.is_admin), max_age=3600, httponly=False, samesite=None)
-            
-            print(f"DEBUG LOGIN: Cookies set, redirecting")
             
             return response
         else:

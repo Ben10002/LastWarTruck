@@ -22,14 +22,13 @@ class BotConfig(db.Model):
     screen_height = db.Column(db.Integer, default=1280)
     
     # Bot Settings (User-configurable)
-    interval_minutes = db.Column(db.Integer, default=60)  # Run every X minutes
     share_alliance = db.Column(db.Boolean, default=False)  # Share in Alliance
     share_world = db.Column(db.Boolean, default=False)  # Share in World Chat (mutually exclusive)
     truck_strength = db.Column(db.Integer, default=30)  # Truck strength in millions
     server_restriction_enabled = db.Column(db.Boolean, default=False)  # Enable server restriction
     server_restriction_value = db.Column(db.Integer, nullable=True)  # Server number restriction
-    running_timer_minutes = db.Column(db.Integer, default=5)  # Running timer between actions
-    remember_trucks_hours = db.Column(db.Integer, default=24)  # Remember saved trucks for X hours
+    running_timer_minutes = db.Column(db.Integer, default=60)  # Total runtime before auto-stop
+    remember_trucks_hours = db.Column(db.Integer, default=1)  # Remember saved trucks (default 1h)
     
     # Bot Status
     is_running = db.Column(db.Boolean, default=False)
@@ -58,13 +57,12 @@ class BotConfig(db.Model):
             'adb_port': self.adb_port,
             'screen_width': self.screen_width,
             'screen_height': self.screen_height,
-            'interval_minutes': self.interval_minutes,
+            'running_timer_minutes': self.running_timer_minutes,
             'share_alliance': self.share_alliance,
             'share_world': self.share_world,
             'truck_strength': self.truck_strength,
             'server_restriction_enabled': self.server_restriction_enabled,
             'server_restriction_value': self.server_restriction_value,
-            'running_timer_minutes': self.running_timer_minutes,
             'remember_trucks_hours': self.remember_trucks_hours
         }
     

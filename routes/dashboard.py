@@ -174,8 +174,8 @@ def configure_bot():
             bot_config.server_restriction_value = None
         
         # Timers
-        bot_config.running_timer_minutes = int(request.form.get('running_timer_minutes', 5))
-        bot_config.remember_trucks_hours = int(request.form.get('remember_trucks_hours', 24))
+        bot_config.running_timer_minutes = int(request.form.get('running_timer_minutes', 60))
+        bot_config.remember_trucks_hours = int(request.form.get('remember_trucks_hours', 1))
         
         db.session.commit()
         

@@ -184,10 +184,10 @@
                                    name="running_timer_minutes" 
                                    value="{{ bot_config.running_timer_minutes }}"
                                    min="1"
-                                   max="60"
+                                   max="1440"
                                    required
                                    class="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all">
-                            <p class="text-xs text-slate-500 mt-1">Time between bot actions</p>
+                            <p class="text-xs text-slate-500 mt-1">How long should the bot run before auto-stop</p>
                         </div>
                         
                         <div>
@@ -201,7 +201,7 @@
                                    max="168"
                                    required
                                    class="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all">
-                            <p class="text-xs text-slate-500 mt-1">How long to remember saved trucks</p>
+                            <p class="text-xs text-slate-500 mt-1">How long to remember saved truck strengths</p>
                         </div>
                     </div>
                 </div>

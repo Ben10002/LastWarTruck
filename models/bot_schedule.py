@@ -1,4 +1,4 @@
-from datetime import datetime, time
+from datetime import datetime, time, date
 from . import db
 
 
@@ -13,8 +13,8 @@ class BotSchedule(db.Model):
     # Schedule Name
     name = db.Column(db.String(100), nullable=False)
     
-    # Day of week (0=Monday, 6=Sunday) - NULL means every day
-    day_of_week = db.Column(db.Integer, nullable=True)
+    # Date (specific date or NULL for recurring daily)
+    scheduled_date = db.Column(db.Date, nullable=True)
     
     # Time settings
     start_time = db.Column(db.Time, nullable=False)
@@ -41,18 +41,23 @@ class BotSchedule(db.Model):
     
     def overlaps_with(self, other_schedule):
         """Check if this schedule overlaps with another schedule"""
-        # Same day or both are daily schedules
-        if self.day_of_week == other_schedule.day_of_week or \
-           self.day_of_week is None or other_schedule.day_of_week is None:
+        # Check if same date (or both are recurring daily)
+        if self.scheduled_date == other_schedule.scheduled_date:
             # Check time overlap
             return (self.start_time < other_schedule.end_time and 
                     self.end_time > other_schedule.start_time)
         return False
     
     @property
-    def day_name(self):
-        """Get human-readable day name"""
-        if self.day_of_week is None:
+    def date_display(self):
+        """Get human-readable date"""
+        if self.scheduled_date is None:
             return "Every Day"
-        days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-        return days[self.day_of_week]
+        return self.scheduled_date.strftime('%B %d, %Y')
+    
+    @property
+    def is_past(self):
+        """Check if schedule date has passed"""
+        if self.scheduled_date is None:
+            return False  # Recurring schedules never expire
+        return self.scheduled_date < date.today()

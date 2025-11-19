@@ -5,9 +5,8 @@ from models.user import User
 from models.license import License
 from models.subscription import Subscription
 from models.bot_config import BotConfig, BotLog
-from datetime import datetime
-from models.bot_config import BotConfig, BotLog
 from models.bot_schedule import BotSchedule
+from datetime import datetime
 
 bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
 
@@ -245,7 +244,7 @@ def add_schedule():
     
     # Get form data
     name = request.form.get('name', '').strip()
-    day_of_week = request.form.get('day_of_week')
+    scheduled_date_str = request.form.get('scheduled_date')
     start_time_str = request.form.get('start_time')
     end_time_str = request.form.get('end_time')
     
@@ -254,7 +253,7 @@ def add_schedule():
         return redirect(url_for('dashboard.schedule', error='missing_fields'))
     
     # Parse times
-    from datetime import time as dt_time
+    from datetime import time as dt_time, date as dt_date
     start_time = dt_time.fromisoformat(start_time_str)
     end_time = dt_time.fromisoformat(end_time_str)
     
@@ -262,14 +261,18 @@ def add_schedule():
     if end_time <= start_time:
         return redirect(url_for('dashboard.schedule', error='invalid_time'))
     
-    # Parse day_of_week (empty = every day)
-    day_of_week_int = int(day_of_week) if day_of_week else None
+    # Parse date (empty = recurring daily)
+    scheduled_date = dt_date.fromisoformat(scheduled_date_str) if scheduled_date_str else None
+    
+    # Check if date is in the past
+    if scheduled_date and scheduled_date < dt_date.today():
+        return redirect(url_for('dashboard.schedule', error='past_date'))
     
     # Create new schedule
     new_schedule = BotSchedule(
         user_id=user.id,
         name=name,
-        day_of_week=day_of_week_int,
+        scheduled_date=scheduled_date,
         start_time=start_time,
         end_time=end_time,
         share_alliance=request.form.get('share_alliance') == 'on',

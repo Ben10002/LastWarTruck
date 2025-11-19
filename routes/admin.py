@@ -14,6 +14,11 @@ def admin_required(f):
     """Decorator to require admin access"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        print(f"DEBUG: current_user.is_authenticated = {current_user.is_authenticated}")
+        print(f"DEBUG: current_user = {current_user}")
+        if hasattr(current_user, 'is_admin'):
+            print(f"DEBUG: current_user.is_admin = {current_user.is_admin}")
+        
         if not current_user.is_authenticated or not current_user.is_admin:
             abort(403)
         return f(*args, **kwargs)

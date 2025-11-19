@@ -13,10 +13,11 @@ class Config:
     SESSION_KEY_PREFIX = 'lkwbot_'
     
     # Cookie Settings
-    SESSION_COOKIE_NAME = 'lkwbot_session'
-    SESSION_COOKIE_HTTPONLY = True
+   # Cookie Settings - MAXIMUM COMPATIBILITY
+    SESSION_COOKIE_NAME = 'session'  # Simpler name
+    SESSION_COOKIE_HTTPONLY = False
     SESSION_COOKIE_SECURE = False
-    SESSION_COOKIE_SAMESITE = 'Lax'  # CRITICAL FIX!
+    SESSION_COOKIE_SAMESITE = None  # Most permissive
     SESSION_COOKIE_PATH = '/'
     SESSION_COOKIE_DOMAIN = None
     

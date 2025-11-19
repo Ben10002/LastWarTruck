@@ -13,9 +13,15 @@ def create_app(config_name=None):
     app = Flask(__name__)
     app.config.from_object(config[config_name])
     
+    # CRITICAL: Set session config BEFORE initializing extensions
+    app.config['SESSION_TYPE'] = 'filesystem'
+    app.config['SESSION_PERMANENT'] = True
+    app.config['PERMANENT_SESSION_LIFETIME'] = 3600
+    
     # Initialize extensions
     db.init_app(app)
     login_manager.init_app(app)
+    login_manager.session_protection = 'strong'  # Add this!
     login_manager.login_view = 'auth.login'
     login_manager.login_message = 'Please log in to access this page.'
     login_manager.login_message_category = 'warning'

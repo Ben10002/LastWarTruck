@@ -46,6 +46,39 @@
         </div>
         {% endif %}
 
+        {% if request.args.get('success') == 'bot_started' %}
+        <div class="mb-6 bg-green-500 shadow-lg rounded-lg p-4">
+            <div class="flex items-start">
+                <svg class="h-6 w-6 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <p class="ml-3 text-sm font-medium text-white">Bot started successfully!</p>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if request.args.get('success') == 'bot_stopped' %}
+        <div class="mb-6 bg-green-500 shadow-lg rounded-lg p-4">
+            <div class="flex items-start">
+                <svg class="h-6 w-6 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <p class="ml-3 text-sm font-medium text-white">Bot stopped successfully!</p>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if request.args.get('success') == 'config_saved' %}
+        <div class="mb-6 bg-green-500 shadow-lg rounded-lg p-4">
+            <div class="flex items-start">
+                <svg class="h-6 w-6 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <p class="ml-3 text-sm font-medium text-white">Bot configuration saved successfully!</p>
+            </div>
+        </div>
+        {% endif %}
+
         {% if request.args.get('error') == 'redeemed' %}
         <div class="mb-6 bg-red-500 shadow-lg rounded-lg p-4">
             <div class="flex items-start">
@@ -86,6 +119,50 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                 </svg>
                 <p class="ml-3 text-sm font-medium text-white">Failed to redeem license. Please try again.</p>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if request.args.get('error') == 'no_subscription' %}
+        <div class="mb-6 bg-red-500 shadow-lg rounded-lg p-4">
+            <div class="flex items-start">
+                <svg class="h-6 w-6 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <p class="ml-3 text-sm font-medium text-white">You need an active subscription to start the bot. Please redeem a license key first.</p>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if request.args.get('error') == 'not_configured' %}
+        <div class="mb-6 bg-red-500 shadow-lg rounded-lg p-4">
+            <div class="flex items-start">
+                <svg class="h-6 w-6 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <p class="ml-3 text-sm font-medium text-white">Please configure your bot settings before starting.</p>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if request.args.get('error') == 'already_running' %}
+        <div class="mb-6 bg-red-500 shadow-lg rounded-lg p-4">
+            <div class="flex items-start">
+                <svg class="h-6 w-6 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <p class="ml-3 text-sm font-medium text-white">Bot is already running!</p>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if request.args.get('error') == 'not_running' %}
+        <div class="mb-6 bg-red-500 shadow-lg rounded-lg p-4">
+            <div class="flex items-start">
+                <svg class="h-6 w-6 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <p class="ml-3 text-sm font-medium text-white">Bot is not running!</p>
             </div>
         </div>
         {% endif %}
@@ -147,6 +224,126 @@
                 </button>
             </form>
         </div>
+
+        <!-- Bot Control Card -->
+        <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-slate-900">Bot Control</h2>
+                {% if bot_config.is_running %}
+                <span class="px-3 py-1 text-sm font-semibold rounded-full bg-green-100 text-green-800 animate-pulse">
+                    ● Running
+                </span>
+                {% else %}
+                <span class="px-3 py-1 text-sm font-semibold rounded-full bg-gray-100 text-gray-800">
+                    ● Stopped
+                </span>
+                {% endif %}
+            </div>
+            
+            {% if not bot_config.is_configured %}
+            <div class="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 mb-6">
+                <div class="flex items-start">
+                    <svg class="w-6 h-6 text-yellow-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-yellow-900">Bot Not Configured</p>
+                        <p class="text-sm text-yellow-700 mt-1">Please configure your VMOSCloud connection before starting the bot.</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Configure Button -->
+                <a href="{{ url_for('dashboard.configure_bot') }}" 
+                   class="flex items-center justify-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    Configure
+                </a>
+                
+                <!-- Start Button -->
+                {% if not bot_config.is_running %}
+                <form method="POST" action="{{ url_for('dashboard.start_bot') }}" class="m-0">
+                    <button type="submit" 
+                            {% if not bot_config.is_configured or not subscription or not subscription.is_active %}disabled{% endif %}
+                            class="w-full flex items-center justify-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Start Bot
+                    </button>
+                </form>
+                {% else %}
+                <!-- Stop Button -->
+                <form method="POST" action="{{ url_for('dashboard.stop_bot') }}" class="m-0">
+                    <button type="submit" 
+                            class="w-full flex items-center justify-center px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/>
+                        </svg>
+                        Stop Bot
+                    </button>
+                </form>
+                {% endif %}
+                
+                <!-- View Logs Button -->
+                <button onclick="document.getElementById('bot-logs').scrollIntoView({behavior: 'smooth'})" 
+                        class="flex items-center justify-center px-6 py-3 bg-slate-600 hover:bg-slate-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    View Logs
+                </button>
+            </div>
+            
+            <!-- Bot Info -->
+            <div class="mt-6 grid grid-cols-2 gap-4 text-sm">
+                <div>
+                    <p class="text-slate-600">Last Started:</p>
+                    <p class="font-semibold text-slate-900">
+                        {% if bot_config.last_started %}
+                        {{ bot_config.last_started.strftime('%Y-%m-%d %H:%M') }}
+                        {% else %}
+                        Never
+                        {% endif %}
+                    </p>
+                </div>
+                <div>
+                    <p class="text-slate-600">Last Stopped:</p>
+                    <p class="font-semibold text-slate-900">
+                        {% if bot_config.last_stopped %}
+                        {{ bot_config.last_stopped.strftime('%Y-%m-%d %H:%M') }}
+                        {% else %}
+                        Never
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bot Logs -->
+        {% if bot_logs %}
+        <div id="bot-logs" class="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
+            <div class="px-6 py-4 border-b border-slate-200">
+                <h2 class="text-xl font-bold text-slate-900">Bot Logs</h2>
+            </div>
+            <div class="p-6 bg-slate-900 max-h-96 overflow-y-auto font-mono text-sm">
+                {% for log in bot_logs %}
+                <div class="mb-2 {% if log.log_type == 'error' %}text-red-400{% elif log.log_type == 'success' %}text-green-400{% elif log.log_type == 'warning' %}text-yellow-400{% else %}text-slate-300{% endif %}">
+                    <span class="text-slate-500">[{{ log.created_at.strftime('%H:%M:%S') }}]</span>
+                    <span class="font-semibold">[{{ log.log_type.upper() }}]</span>
+                    {{ log.message }}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
         
         <!-- License History -->
         {% if licenses %}

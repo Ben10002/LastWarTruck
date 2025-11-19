@@ -93,11 +93,18 @@ class VMOSCloudBot:
         try:
             self.log("Setting up SSH tunnel...")
             
-            # VMOSCloud uses password authentication, not key files
-            # Build SSH command without key authentication
+            # Kill any existing tunnels on this port first
+            self.log("Cleaning up old tunnels...")
+            subprocess.run(['pkill', '-f', f'{self.config.local_adb_port}:adb-proxy'], 
+                         capture_output=True)
+            subprocess.run(['adb', 'disconnect', f'localhost:{self.config.local_adb_port}'],
+                         capture_output=True)
+            time.sleep(1)
+            
+            # Build SSH command
             ssh_cmd = [
                 'sshpass',
-                '-p', self.config.ssh_key,  # Use the "key" as password
+                '-p', self.config.ssh_key,
                 'ssh',
                 '-oHostKeyAlgorithms=+ssh-rsa',
                 '-oStrictHostKeyChecking=no',
@@ -105,7 +112,7 @@ class VMOSCloudBot:
                 self.config.ssh_username,
                 '-p', str(self.config.ssh_port),
                 '-L', f'{self.config.local_adb_port}:adb-proxy:{self.config.adb_proxy_port}',
-                '-Nf'  # Background mode
+                '-Nf'
             ]
             
             # Execute SSH tunnel
@@ -113,28 +120,16 @@ class VMOSCloudBot:
                 ssh_cmd,
                 capture_output=True,
                 text=True,
-                timeout=10
+                timeout=15
             )
             
             if result.returncode != 0:
                 self.log(f"SSH tunnel failed: {result.stderr}", 'error')
                 return False
             
-            # Wait for tunnel to establish
-            time.sleep(3)
-            
-            self.log("SSH tunnel established successfully")
-            return True
-            
-        except Exception as e:
-            self.log(f"SSH tunnel error: {e}", 'error')
-            return False
-            
-            # Wait for tunnel to establish
-            time.sleep(3)
-            
-            # Store key file path for cleanup
-            self.ssh_key_file = key_file_path
+            # Wait longer for tunnel to establish
+            self.log("Waiting for tunnel to stabilize...")
+            time.sleep(5)
             
             self.log("SSH tunnel established successfully")
             return True

@@ -19,7 +19,6 @@ class BotConfig(db.Model):
     ssh_port = db.Column(db.Integer, default=22)
     ssh_username = db.Column(db.String(255), nullable=True)
     adb_proxy_port = db.Column(db.Integer, nullable=True)
-    local_adb_port = db.Column(db.Integer, default=7071)
     
     # Screen resolution
     screen_width = db.Column(db.Integer, default=720)
@@ -53,6 +52,12 @@ class BotConfig(db.Model):
         ])
     
     @property
+    def local_adb_port(self):
+        """Get unique local ADB port for this user"""
+        # Base port 7000 + user_id = unique port per user
+        return 7000 + self.user_id
+    
+    @property
     def is_running(self):
         """Check if bot is currently running"""
         active_timer = BotTimer.query.filter_by(
@@ -84,11 +89,10 @@ class BotConfig(db.Model):
         if port_match:
             self.ssh_port = int(port_match.group(1))
         
-        # Extract local port and proxy port (-L LOCAL:adb-proxy:REMOTE)
-        port_forward_match = re.search(r'-L\s+(\d+):adb-proxy:(\d+)', self.ssh_command)
+        # Extract proxy port (-L LOCAL:adb-proxy:REMOTE)
+        port_forward_match = re.search(r'-L\s+\d+:adb-proxy:(\d+)', self.ssh_command)
         if port_forward_match:
-            self.local_adb_port = int(port_forward_match.group(1))
-            self.adb_proxy_port = int(port_forward_match.group(2))
+            self.adb_proxy_port = int(port_forward_match.group(1))
         
         return True
     

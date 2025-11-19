@@ -7,7 +7,7 @@ import pytesseract
 import re
 from datetime import datetime
 from models import db
-from models.bot_config import BotConfig, BotLog
+from models.bot_config import BotConfig, BotLog, BotTimer
 from models.user import User
 
 
@@ -32,6 +32,9 @@ class VMOSCloudBot:
         # Screen dimensions
         self.screen_width = self.config.screen_width
         self.screen_height = self.config.screen_height
+        
+        # Device identifier for ADB
+        self.device = f'localhost:{self.config.local_adb_port}'
         
         # Fixed coordinates (for 720x1280 screen)
         self.COORDS = {
@@ -97,7 +100,7 @@ class VMOSCloudBot:
             self.log("Cleaning up old tunnels...")
             subprocess.run(['pkill', '-f', f'{self.config.local_adb_port}:adb-proxy'], 
                          capture_output=True)
-            subprocess.run(['adb', 'disconnect', f'localhost:{self.config.local_adb_port}'],
+            subprocess.run(['adb', 'disconnect', self.device],
                          capture_output=True)
             time.sleep(1)
             
@@ -145,7 +148,7 @@ class VMOSCloudBot:
             
             # ADB connect command
             result = subprocess.run(
-                ['adb', 'connect', f'localhost:{self.config.local_adb_port}'],
+                ['adb', 'connect', self.device],
                 capture_output=True,
                 text=True,
                 timeout=10
@@ -167,11 +170,11 @@ class VMOSCloudBot:
         """Take screenshot from device"""
         try:
             # Screenshot to device
-            subprocess.run(['adb', 'shell', 'screencap', '-p', '/sdcard/screen.png'], check=True)
+            subprocess.run(['adb', '-s', self.device, 'shell', 'screencap', '-p', '/sdcard/screen.png'], check=True)
             
-            # Pull to local
-            screenshot_path = '/tmp/screen.png'
-            subprocess.run(['adb', 'pull', '/sdcard/screen.png', screenshot_path], check=True)
+            # Pull to local (unique filename per user)
+            screenshot_path = f'/tmp/screen_{self.user_id}.png'
+            subprocess.run(['adb', '-s', self.device, 'pull', '/sdcard/screen.png', screenshot_path], check=True)
             
             # Load with OpenCV
             img = cv2.imread(screenshot_path)
@@ -214,7 +217,7 @@ class VMOSCloudBot:
     def tap(self, x, y):
         """Execute tap on device"""
         try:
-            subprocess.run(['adb', 'shell', 'input', 'tap', str(x), str(y)], check=True)
+            subprocess.run(['adb', '-s', self.device, 'shell', 'input', 'tap', str(x), str(y)], check=True)
             time.sleep(0.5)  # Wait for UI reaction
             return True
         except Exception as e:
@@ -367,6 +370,12 @@ class VMOSCloudBot:
             
             cycle_count = 0
             while True:
+                # Check if bot should stop (DB query in each cycle)
+                timer = BotTimer.query.filter_by(user_id=self.user_id, stopped_at=None).first()
+                if not timer:
+                    self.log("Bot stop signal received, exiting loop")
+                    break
+                
                 cycle_count += 1
                 self.log(f"--- Cycle {cycle_count} ---")
                 
@@ -375,12 +384,30 @@ class VMOSCloudBot:
                 # Wait before next cycle
                 time.sleep(3)
                 
-                # Check if bot should stop (check timer, etc)
-                # TODO: Implement stop conditions
-                
         except KeyboardInterrupt:
             self.log("Bot stopped by user")
         except Exception as e:
             self.log(f"Bot error: {e}", 'error')
         finally:
             self.cleanup()
+    
+    def cleanup(self):
+        """Cleanup resources"""
+        try:
+            self.log("Cleaning up...")
+            
+            # Disconnect ADB
+            if self.adb_connected:
+                subprocess.run(['adb', 'disconnect', self.device])
+            
+            # Kill SSH tunnel
+            if self.ssh_tunnel_process:
+                self.ssh_tunnel_process.terminate()
+            
+            # Also kill any lingering SSH processes for this port
+            subprocess.run(['pkill', '-f', f'{self.config.local_adb_port}:adb-proxy'])
+            
+            self.log("Cleanup complete")
+            
+        except Exception as e:
+            self.log(f"Cleanup error: {e}", 'error')

@@ -46,7 +46,7 @@
                 <div class="flex-1">
                     <p class="text-lg font-bold text-green-900">Active Subscription</p>
                     <p class="text-sm text-green-700">
-                        Expires on: <strong>{{ subscription.end_date.strftime('%B %d, %Y') }}</strong>
+                        Expires on: <strong>{{ subscription.expires_at.strftime('%B %d, %Y') }}</strong>
                     </p>
                     <p class="text-xs text-green-600 mt-1">
                         {{ subscription.days_remaining }} days remaining

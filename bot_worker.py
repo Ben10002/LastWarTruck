@@ -197,6 +197,14 @@ class VMOSCloudBot:
             result = cv2.matchTemplate(screenshot, template, cv2.TM_CCOEFF_NORMED)
             min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
             
+            # DEBUG: Save screenshot and template for inspection
+            debug_path = f'/tmp/debug_screenshot_{self.user_id}.png'
+            cv2.imwrite(debug_path, screenshot)
+            self.log(f"Screenshot saved to {debug_path} for debugging")
+            self.log(f"Template: {self.template_path}, exists: {os.path.exists(self.template_path)}")
+            self.log(f"Screenshot shape: {screenshot.shape}, Template shape: {template.shape}")
+            self.log(f"Match confidence: {max_val:.4f} (threshold: 0.7)")
+            
             # Threshold
             threshold = 0.7
             if max_val >= threshold:
@@ -205,9 +213,10 @@ class VMOSCloudBot:
                 center_x = max_loc[0] + w // 2
                 center_y = max_loc[1] + h // 2
                 
-                self.log(f"Truck icon found at ({center_x}, {center_y}) with confidence {max_val:.2f}")
+                self.log(f"Truck found at ({center_x}, {center_y}) with {max_val:.2%} confidence", 'success')
                 return (center_x, center_y)
             else:
+                self.log(f"No truck found (best match: {max_val:.2%}, threshold: {threshold:.2%})", 'info')
                 return None
                 
         except Exception as e:
@@ -266,13 +275,13 @@ class VMOSCloudBot:
         # Check strength limit
         if 'strength' in truck_info:
             if truck_info['strength'] > self.config.truck_strength:
-                self.log(f"Truck too strong: {truck_info['strength']}M > {self.config.truck_strength}M")
+                self.log(f"Truck too strong: {truck_info['strength']}M > {self.config.truck_strength}M", 'warning')
                 return False
         
         # Check server restriction
         if self.config.server_restriction_enabled and 'server' in truck_info:
             if truck_info['server'] != self.config.server_restriction_value:
-                self.log(f"Wrong server: {truck_info['server']} != {self.config.server_restriction_value}")
+                self.log(f"Wrong server: {truck_info['server']} != {self.config.server_restriction_value}", 'warning')
                 return False
         
         return True
@@ -346,7 +355,6 @@ class VMOSCloudBot:
             # Find truck icon
             truck_coords = self.find_truck_icon(screenshot)
             if truck_coords is None:
-                self.log("No truck found in this cycle")
                 # Click refresh to search for new trucks
                 self.tap(self.COORDS['refresh'][0], self.COORDS['refresh'][1])
                 return True  # No truck found is not an error

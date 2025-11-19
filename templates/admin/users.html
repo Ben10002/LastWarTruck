@@ -112,7 +112,7 @@
                                     {% if user.subscription.is_active %}
                                     <span class="text-green-600 font-medium">Active</span>
                                     <br>
-                                    <span class="text-xs text-slate-500">Expires: {{ user.subscription.end_date.strftime('%Y-%m-%d') }}</span>
+                                    <span class="text-xs text-slate-500">Expires: {{ user.subscription.expires_at.strftime('%Y-%m-%d') }}</span>
                                     {% else %}
                                     <span class="text-red-600">Expired</span>
                                     {% endif %}

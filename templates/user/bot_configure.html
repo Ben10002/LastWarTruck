@@ -105,12 +105,12 @@
                         <svg class="w-6 h-6 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                         </svg>
-                        Truck Strength (in M)
+                        Truck Strength Limit (in M)
                     </h3>
                     
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-2">
-                            Strength in Millions
+                            Strength Limit in Millions
                         </label>
                         <input type="number" 
                                name="truck_strength" 
@@ -119,8 +119,9 @@
                                max="999"
                                required
                                class="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all">
-                        <p class="text-xs text-slate-500 mt-1">Enter truck strength in millions (e.g., 30 = 30M)</p>
+                        <p class="text-xs text-slate-500 mt-1">Maximum truck strength to share (e.g., 30 = 30M)</p>
                     </div>
+                </div>
                 </div>
                 
                 <!-- Server Restriction -->
@@ -175,21 +176,42 @@
                         Timer Settings
                     </h3>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-6">
+                        <!-- Auto-Stop Timer Toggle -->
                         <div>
-                            <label class="block text-sm font-semibold text-slate-700 mb-2">
-                                Running Timer (minutes)
-                            </label>
-                            <input type="number" 
-                                   name="running_timer_minutes" 
-                                   value="{{ bot_config.running_timer_minutes }}"
-                                   min="1"
-                                   max="1440"
-                                   required
-                                   class="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all">
-                            <p class="text-xs text-slate-500 mt-1">How long should the bot run before auto-stop</p>
+                            <div class="flex items-center justify-between p-4 bg-slate-50 rounded-lg mb-4">
+                                <div>
+                                    <p class="font-semibold text-slate-900">Enable Auto-Stop Timer</p>
+                                    <p class="text-sm text-slate-600">Automatically stop bot after specified time</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" 
+                                           name="running_timer_enabled" 
+                                           id="running_timer_toggle"
+                                           {% if bot_config.running_timer_enabled %}checked{% endif %}
+                                           onchange="document.getElementById('running_timer_value').disabled = !this.checked"
+                                           class="sr-only peer">
+                                    <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+                                </label>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                    Auto-Stop After (minutes)
+                                </label>
+                                <input type="number" 
+                                       name="running_timer_minutes" 
+                                       id="running_timer_value"
+                                       value="{{ bot_config.running_timer_minutes }}"
+                                       min="1"
+                                       max="1440"
+                                       {% if not bot_config.running_timer_enabled %}disabled{% endif %}
+                                       class="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed">
+                                <p class="text-xs text-slate-500 mt-1">Bot will automatically stop after this duration</p>
+                            </div>
                         </div>
                         
+                        <!-- Remember Trucks -->
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-2">
                                 Remember Trucks (hours)
@@ -201,7 +223,7 @@
                                    max="168"
                                    required
                                    class="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all">
-                            <p class="text-xs text-slate-500 mt-1">Trucks will be deleted from memory and may be shared again after this time</p>
+                            <p class="text-xs text-slate-500 mt-1">Bot will forget saved trucks after this time and may share them again</p>
                         </div>
                     </div>
                 </div>

@@ -163,7 +163,7 @@ def configure_bot():
         bot_config.share_alliance = share_alliance
         bot_config.share_world = share_world
         
-        # Truck strength (in millions)
+        # Truck strength limit (in millions)
         bot_config.truck_strength = int(request.form.get('truck_strength', 30))
         
         # Server restriction
@@ -173,8 +173,14 @@ def configure_bot():
         else:
             bot_config.server_restriction_value = None
         
-        # Timers
-        bot_config.running_timer_minutes = int(request.form.get('running_timer_minutes', 60))
+        # Running timer
+        bot_config.running_timer_enabled = request.form.get('running_timer_enabled') == 'on'
+        if bot_config.running_timer_enabled:
+            bot_config.running_timer_minutes = int(request.form.get('running_timer_minutes', 60))
+        else:
+            bot_config.running_timer_minutes = 60  # Keep default for when enabled later
+        
+        # Remember trucks
         bot_config.remember_trucks_hours = int(request.form.get('remember_trucks_hours', 1))
         
         db.session.commit()

@@ -22,12 +22,13 @@ class BotConfig(db.Model):
     screen_height = db.Column(db.Integer, default=1280)
     
     # Bot Settings (User-configurable)
-    share_alliance = db.Column(db.Boolean, default=False)  # Share in Alliance
-    share_world = db.Column(db.Boolean, default=False)  # Share in World Chat (mutually exclusive)
-    truck_strength = db.Column(db.Integer, default=30)  # Truck strength in millions
-    server_restriction_enabled = db.Column(db.Boolean, default=False)  # Enable server restriction
+    share_alliance = db.Column(db.Boolean, default=True)  # Share in Alliance (DEFAULT: ON)
+    share_world = db.Column(db.Boolean, default=False)  # Share in World Chat
+    truck_strength = db.Column(db.Integer, default=30)  # Truck strength limit in millions (DEFAULT: 30M)
+    server_restriction_enabled = db.Column(db.Boolean, default=False)  # Enable server restriction (DEFAULT: OFF)
     server_restriction_value = db.Column(db.Integer, nullable=True)  # Server number restriction
-    running_timer_minutes = db.Column(db.Integer, default=60)  # Total runtime before auto-stop
+    running_timer_enabled = db.Column(db.Boolean, default=False)  # Enable auto-stop timer (DEFAULT: OFF)
+    running_timer_minutes = db.Column(db.Integer, default=60)  # Auto-stop timer in minutes
     remember_trucks_hours = db.Column(db.Integer, default=1)  # Remember saved trucks (default 1h)
     
     # Bot Status

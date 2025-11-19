@@ -113,20 +113,20 @@ def start_bot():
     # Start bot worker in background thread
     import threading
     from bot_worker import VMOSCloudBot
-    from flask import current_app
-
-def run_bot():
-    # Get app instance from current_app
-    app = current_app._get_current_object()
     
-    # Push app context for this thread
-    with app.app_context():
-        try:
-            bot = VMOSCloudBot(user.id)
-            if bot.start():
-                bot.run()
-        except Exception as e:
-            print(f"Bot thread error: {e}")
+    def run_bot():
+        # Import app inside thread
+        from app import create_app
+        app = create_app()
+        
+        # Push app context for this thread
+        with app.app_context():
+            try:
+                bot = VMOSCloudBot(user.id)
+                if bot.start():
+                    bot.run()
+            except Exception as e:
+                print(f"Bot thread error: {e}")
     
     bot_thread = threading.Thread(target=run_bot, daemon=True)
     bot_thread.start()

@@ -229,11 +229,15 @@ def schedule():
         db.session.add(bot_config)
         db.session.commit()
     
+    # Get today's date for min attribute
+    from datetime import date
+    today = date.today().strftime('%Y-%m-%d')
+    
     return render_template('user/schedule.html', 
                          user=user,
                          schedules=schedules,
-                         bot_config=bot_config)
-
+                         bot_config=bot_config,
+                         today=today)
 
 @bp.route('/schedule/add', methods=['POST'])
 @login_required

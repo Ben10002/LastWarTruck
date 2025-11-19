@@ -142,5 +142,10 @@ class BotLog(db.Model):
         db.session.commit()
         return log
     
+    @staticmethod
+    def get_recent_logs(user_id, limit=10):
+        """Get recent logs for a user"""
+        return BotLog.query.filter_by(user_id=user_id).order_by(BotLog.timestamp.desc()).limit(limit).all()
+    
     def __repr__(self):
         return f'<BotLog {self.level}: {self.message[:50]}>'

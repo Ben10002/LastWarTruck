@@ -12,16 +12,33 @@ def admin_required(f):
     """Decorator to require admin access"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        user_id = session.get('user_id')
-        is_admin = session.get('is_admin')
+        # Try cookies first
+        user_id = request.cookies.get('user_id')
+        is_admin_cookie = request.cookies.get('is_admin')
         
-        print(f"DEBUG: user_id from session = {user_id}")
-        print(f"DEBUG: is_admin from session = {is_admin}")
+        print(f"DEBUG: user_id from cookie = {user_id}")
+        print(f"DEBUG: is_admin from cookie = {is_admin_cookie}")
+        print(f"DEBUG: All cookies = {dict(request.cookies)}")
         
-        if not user_id or not is_admin:
-            abort(403)
+        if user_id and is_admin_cookie == 'True':
+            user = User.query.get(int(user_id))
+            if user and user.is_admin:
+                print(f"DEBUG: Access granted via cookie for user {user.email}")
+                return f(*args, **kwargs)
         
-        return f(*args, **kwargs)
+        # Fallback to session
+        user_id_session = session.get('user_id')
+        is_admin_session = session.get('is_admin')
+        
+        print(f"DEBUG: user_id from session = {user_id_session}")
+        print(f"DEBUG: is_admin from session = {is_admin_session}")
+        
+        if user_id_session and is_admin_session:
+            print(f"DEBUG: Access granted via session")
+            return f(*args, **kwargs)
+        
+        print(f"DEBUG: Access denied - no valid auth")
+        abort(403)
     return decorated_function
 
 
@@ -86,54 +103,4 @@ def delete_license(license_id):
     license = License.query.get_or_404(license_id)
     
     if license.is_redeemed:
-        flash('Cannot delete redeemed license.', 'error')
-        return redirect(url_for('admin.licenses'))
-    
-    db.session.delete(license)
-    db.session.commit()
-    
-    flash('License deleted successfully.', 'success')
-    return redirect(url_for('admin.licenses'))
-
-
-@bp.route('/users')
-@admin_required
-def users():
-    """View and manage users"""
-    users = User.query.order_by(User.created_at.desc()).all()
-    return render_template('admin/users.html', users=users)
-
-
-@bp.route('/users/toggle/<int:user_id>', methods=['POST'])
-@admin_required
-def toggle_user(user_id):
-    """Suspend/Activate user"""
-    user = User.query.get_or_404(user_id)
-    
-    if user.is_admin:
-        flash('Cannot modify admin user.', 'error')
-        return redirect(url_for('admin.users'))
-    
-    user.is_active = not user.is_active
-    db.session.commit()
-    
-    status = 'activated' if user.is_active else 'suspended'
-    flash(f'User {user.email} has been {status}.', 'success')
-    return redirect(url_for('admin.users'))
-
-
-@bp.route('/users/delete/<int:user_id>', methods=['POST'])
-@admin_required
-def delete_user(user_id):
-    """Delete a user"""
-    user = User.query.get_or_404(user_id)
-    
-    if user.is_admin:
-        flash('Cannot delete admin user.', 'error')
-        return redirect(url_for('admin.users'))
-    
-    db.session.delete(user)
-    db.session.commit()
-    
-    flash(f'User {user.email} has been deleted.', 'success')
-    return redirect(url_for('admin.users'))
+        flash('Cannot delete redeemed

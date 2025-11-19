@@ -3,6 +3,7 @@ from flask_login import logout_user
 from models import db
 from models.user import User
 from forms import LoginForm, RegistrationForm
+import secrets
 
 # Disable CSRF for testing
 class LoginFormNoCSRF(LoginForm):
@@ -15,8 +16,6 @@ class RegistrationFormNoCSRF(RegistrationForm):
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
-
-import secrets
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -42,6 +41,8 @@ def login():
             session['auth_token'] = auth_token
             session.permanent = True
             
+            print(f"DEBUG LOGIN: Setting cookies for user {user.id}")
+            
             user.update_last_login()
             db.session.commit()
             
@@ -54,6 +55,9 @@ def login():
             # Set cookie manually with max compatibility
             response.set_cookie('auth_token', auth_token, max_age=3600, httponly=False, samesite=None)
             response.set_cookie('user_id', str(user.id), max_age=3600, httponly=False, samesite=None)
+            response.set_cookie('is_admin', str(user.is_admin), max_age=3600, httponly=False, samesite=None)
+            
+            print(f"DEBUG LOGIN: Cookies set, redirecting")
             
             return response
         else:
@@ -92,4 +96,8 @@ def logout():
     """Logout user"""
     session.clear()
     logout_user()
-    return redirect(url_for('auth.login'))
+    response = redirect(url_for('auth.login'))
+    response.set_cookie('auth_token', '', max_age=0)
+    response.set_cookie('user_id', '', max_age=0)
+    response.set_cookie('is_admin', '', max_age=0)
+    return response

@@ -166,13 +166,19 @@ def configure_user_phone(user_id):
         db.session.commit()
     
     if request.method == 'POST':
-        # Update SSH configuration
-        bot_config.ssh_host = request.form.get('ssh_host', '').strip()
-        bot_config.ssh_port = int(request.form.get('ssh_port', 22))
-        bot_config.ssh_username = request.form.get('ssh_username', '').strip()
-        bot_config.ssh_key = request.form.get('ssh_key', '').strip()
-        bot_config.adb_proxy_port = int(request.form.get('adb_proxy_port')) if request.form.get('adb_proxy_port') else None
-        bot_config.local_adb_port = int(request.form.get('local_adb_port', 7071))
+        # Get form data
+        ssh_command = request.form.get('ssh_command', '').strip()
+        ssh_key = request.form.get('ssh_key', '').strip()
+        
+        # Update configuration
+        bot_config.ssh_command = ssh_command
+        bot_config.ssh_key = ssh_key
+        
+        # Parse SSH command to extract details
+        if ssh_command:
+            bot_config.parse_ssh_command()
+        
+        # Update screen resolution
         bot_config.screen_width = int(request.form.get('screen_width', 720))
         bot_config.screen_height = int(request.form.get('screen_height', 1280))
         

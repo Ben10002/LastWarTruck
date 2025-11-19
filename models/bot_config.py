@@ -1,9 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from . import db
 
 
 class BotConfig(db.Model):
-    """BotConfig Model - Bot & VMOSCloud settings per user"""
+    """BotConfig Model - User's bot configuration and settings"""
     
     __tablename__ = 'bot_configs'
     
@@ -11,14 +11,17 @@ class BotConfig(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
     
     # VMOSCloud SSH Connection (Admin-managed)
-    ssh_host = db.Column(db.String(255), nullable=True)  # e.g., 103.237.100.130
-    ssh_port = db.Column(db.Integer, default=22)  # e.g., 1824
-    ssh_username = db.Column(db.String(255), nullable=True)  # e.g., 10.0.8.67_1763575271849@103.237.100.130
+    ssh_command = db.Column(db.Text, nullable=True)  # Full SSH command from VMOSCloud
     ssh_key = db.Column(db.Text, nullable=True)  # Connection key (base64)
-    adb_proxy_port = db.Column(db.Integer, nullable=True)  # e.g., 39131
-    local_adb_port = db.Column(db.Integer, default=7071)  # Local port for ADB
     
-    # Screen Settings (Admin-managed)
+    # Parsed from ssh_command (auto-filled)
+    ssh_host = db.Column(db.String(255), nullable=True)
+    ssh_port = db.Column(db.Integer, default=22)
+    ssh_username = db.Column(db.String(255), nullable=True)
+    adb_proxy_port = db.Column(db.Integer, nullable=True)
+    local_adb_port = db.Column(db.Integer, default=7071)
+    
+    # Screen resolution
     screen_width = db.Column(db.Integer, default=720)
     screen_height = db.Column(db.Integer, default=1280)
     
@@ -32,13 +35,14 @@ class BotConfig(db.Model):
     running_timer_minutes = db.Column(db.Integer, default=60)  # Auto-stop timer in minutes
     remember_trucks_hours = db.Column(db.Integer, default=1)  # Remember saved trucks (default 1h)
     
-    # Bot Status
-    is_running = db.Column(db.Boolean, default=False)
-    last_started = db.Column(db.DateTime, nullable=True)
-    last_stopped = db.Column(db.DateTime, nullable=True)
-    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationship
+    user = db.relationship('User', backref=db.backref('bot_config', uselist=False))
+    
+    def __repr__(self):
+        return f'<BotConfig User:{self.user_id}>'
     
     @property
     def is_configured(self):
@@ -51,101 +55,92 @@ class BotConfig(db.Model):
             self.adb_proxy_port
         ])
     
-    def to_dict(self):
-        """Convert to dictionary for bot"""
-        return {
-            'ssh_host': self.ssh_host,
-            'ssh_port': self.ssh_port,
-            'ssh_user': self.ssh_user,
-            'ssh_pass': self.ssh_pass,
-            'adb_port': self.adb_port,
-            'screen_width': self.screen_width,
-            'screen_height': self.screen_height,
-            'running_timer_minutes': self.running_timer_minutes,
-            'share_alliance': self.share_alliance,
-            'share_world': self.share_world,
-            'truck_strength': self.truck_strength,
-            'server_restriction_enabled': self.server_restriction_enabled,
-            'server_restriction_value': self.server_restriction_value,
-            'remember_trucks_hours': self.remember_trucks_hours
-        }
-    
-    def __repr__(self):
-        return f'<BotConfig user_id={self.user_id} configured={self.is_configured}>'
+    def parse_ssh_command(self):
+        """Parse SSH command and extract connection details"""
+        if not self.ssh_command:
+            return False
+        
+        import re
+        
+        # Example: ssh -oHostKeyAlgorithms=+ssh-rsa 10.0.8.67_1763575271849@103.237.100.130 -p 1824 -L 7071:adb-proxy:39131 -Nf
+        
+        # Extract username@host
+        username_match = re.search(r'\s+([^\s]+@[0-9.]+)\s+-p', self.ssh_command)
+        if username_match:
+            full_username = username_match.group(1)
+            self.ssh_username = full_username
+            # Extract host from username@host
+            if '@' in full_username:
+                self.ssh_host = full_username.split('@')[1]
+        
+        # Extract port (-p PORT)
+        port_match = re.search(r'-p\s+(\d+)', self.ssh_command)
+        if port_match:
+            self.ssh_port = int(port_match.group(1))
+        
+        # Extract local port and proxy port (-L LOCAL:adb-proxy:REMOTE)
+        port_forward_match = re.search(r'-L\s+(\d+):adb-proxy:(\d+)', self.ssh_command)
+        if port_forward_match:
+            self.local_adb_port = int(port_forward_match.group(1))
+            self.adb_proxy_port = int(port_forward_match.group(2))
+        
+        return True
 
 
 class BotTimer(db.Model):
-    """BotTimer Model - Persistent timers per user"""
+    """BotTimer Model - Track when bot was started/stopped"""
     
     __tablename__ = 'bot_timers'
     
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    timer_name = db.Column(db.String(50), nullable=False)  # e.g. 'lkw_1', 'lkw_2', etc.
-    next_run = db.Column(db.DateTime, nullable=False)
-    interval_seconds = db.Column(db.Integer, nullable=False)
-    is_active = db.Column(db.Boolean, default=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Unique constraint: A user can only have one timer with the same name
-    __table_args__ = (
-        db.UniqueConstraint('user_id', 'timer_name', name='unique_user_timer'),
-    )
+    started_at = db.Column(db.DateTime, default=datetime.utcnow)
+    stopped_at = db.Column(db.DateTime, nullable=True)
     
-    @property
-    def is_ready(self):
-        """Check if timer is ready to execute"""
-        return datetime.utcnow() >= self.next_run and self.is_active
-    
-    def reset(self):
-        """Reset timer (next run = now + interval)"""
-        from datetime import timedelta
-        self.next_run = datetime.utcnow() + timedelta(seconds=self.interval_seconds)
-        self.updated_at = datetime.utcnow()
-        db.session.commit()
+    # Relationship
+    user = db.relationship('User', backref=db.backref('bot_timers', lazy='dynamic'))
     
     def __repr__(self):
-        return f'<BotTimer {self.timer_name} next={self.next_run}>'
+        return f'<BotTimer User:{self.user_id} Started:{self.started_at}>'
+    
+    @property
+    def duration_minutes(self):
+        """Get duration in minutes"""
+        if self.stopped_at:
+            delta = self.stopped_at - self.started_at
+        else:
+            delta = datetime.utcnow() - self.started_at
+        return int(delta.total_seconds() / 60)
+    
+    @property
+    def is_running(self):
+        """Check if timer is still running"""
+        return self.stopped_at is None
 
 
 class BotLog(db.Model):
-    """BotLog Model - Log entries per user"""
+    """BotLog Model - Log bot actions and events"""
     
     __tablename__ = 'bot_logs'
     
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
-    log_type = db.Column(db.String(20), nullable=False)  # 'info', 'success', 'warning', 'error'
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    level = db.Column(db.String(20), default='info')  # info, warning, error, success
     message = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationship
+    user = db.relationship('User', backref=db.backref('bot_logs', lazy='dynamic'))
     
     def __repr__(self):
-        return f'<BotLog [{self.log_type}] {self.message[:50]}>'
+        return f'<BotLog {self.level}: {self.message[:50]}>'
     
     @staticmethod
-    def add_log(user_id, log_type, message):
-        """Add new log entry"""
-        log = BotLog(
-            user_id=user_id,
-            log_type=log_type,
-            message=message
-        )
+    def add_log(user_id, level, message):
+        """Helper method to add log entry"""
+        log = BotLog(user_id=user_id, level=level, message=message)
         db.session.add(log)
         db.session.commit()
-    
-    @staticmethod
-    def get_recent_logs(user_id, limit=50):
-        """Get the most recent logs for a user"""
-        return BotLog.query.filter_by(user_id=user_id)\
-                          .order_by(BotLog.created_at.desc())\
-                          .limit(limit)\
-                          .all()
-    
-    @staticmethod
-    def clear_old_logs(days=7):
-        """Delete logs older than X days"""
-        from datetime import timedelta
-        cutoff = datetime.utcnow() - timedelta(days=days)
-        BotLog.query.filter(BotLog.created_at < cutoff).delete()
-        db.session.commit()
+        return log

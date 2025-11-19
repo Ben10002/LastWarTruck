@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session
-from flask_login import login_user, logout_user, current_user
+from flask_login import logout_user
 from models import db
 from models.user import User
 from forms import LoginForm, RegistrationForm
@@ -19,11 +19,13 @@ bp = Blueprint('auth', __name__, url_prefix='/auth')
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     """Login page"""
-    # Redirect if already logged in
-    if current_user.is_authenticated:
-        if current_user.is_admin:
-            return redirect(url_for('admin.dashboard'))
-        return redirect(url_for('dashboard.index'))
+    # Check if already logged in via session
+    if session.get('user_id'):
+        user = User.query.get(session.get('user_id'))
+        if user:
+            if user.is_admin:
+                return redirect(url_for('admin.dashboard'))
+            return redirect(url_for('dashboard.index'))
     
     form = LoginFormNoCSRF()
     
@@ -35,21 +37,15 @@ def login():
         if user and user.check_password(form.password.data):
             # Check if account is active
             if not user.is_active:
-                flash('Your account has been suspended. Please contact support.', 'error')
                 return redirect(url_for('auth.login'))
             
-            # Login user
-            login_user(user, remember=form.remember_me.data)
+            # Manual session login
+            session['user_id'] = user.id
+            session['is_admin'] = user.is_admin
+            session.permanent = True
+            
             user.update_last_login()
-            
-            # FORCE session to save
-            session.modified = True
             db.session.commit()
-            
-            # Redirect to next page or dashboard
-            next_page = request.args.get('next')
-            if next_page:
-                return redirect(next_page)
             
             # Redirect based on role
             if user.is_admin:
@@ -65,7 +61,7 @@ def login():
 def register():
     """Registration page"""
     # Redirect if already logged in
-    if current_user.is_authenticated:
+    if session.get('user_id'):
         return redirect(url_for('dashboard.index'))
     
     form = RegistrationFormNoCSRF()
@@ -89,5 +85,6 @@ def register():
 @bp.route('/logout')
 def logout():
     """Logout user"""
+    session.clear()
     logout_user()
     return redirect(url_for('auth.login'))

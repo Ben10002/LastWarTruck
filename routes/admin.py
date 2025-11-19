@@ -1,7 +1,5 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
-from flask_login import current_user
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session, abort
 from functools import wraps
-from flask import abort
 from models import db
 from models.user import User
 from models.license import License
@@ -14,25 +12,15 @@ def admin_required(f):
     """Decorator to require admin access"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        print(f"DEBUG: current_user.is_authenticated = {current_user.is_authenticated}")
-        print(f"DEBUG: current_user = {current_user}")
+        user_id = session.get('user_id')
+        is_admin = session.get('is_admin')
         
-        # TEMPORARY: Allow access if user just logged in
-        if not current_user.is_authenticated:
-            # Try to get user from session manually
-            from flask import session as flask_session
-            user_id = flask_session.get('_user_id')
-            print(f"DEBUG: Session user_id = {user_id}")
-            
-            if user_id:
-                user = User.query.get(int(user_id))
-                if user and user.is_admin:
-                    print(f"DEBUG: Found admin user in session: {user.email}")
-                    # Allow access
-                    return f(*args, **kwargs)
+        print(f"DEBUG: user_id from session = {user_id}")
+        print(f"DEBUG: is_admin from session = {is_admin}")
         
-        if not current_user.is_authenticated or not current_user.is_admin:
+        if not user_id or not is_admin:
             abort(403)
+        
         return f(*args, **kwargs)
     return decorated_function
 

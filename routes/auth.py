@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, session, get_flashed_messages
+from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, current_user
 from models import db
 from models.user import User
@@ -19,10 +19,6 @@ bp = Blueprint('auth', __name__, url_prefix='/auth')
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     """Login page"""
-    # DEBUG: Check flashed messages
-    messages = get_flashed_messages(with_categories=True)
-    print("DEBUG LOGIN: Flash messages found:", messages)
-    
     # Redirect if already logged in
     if current_user.is_authenticated:
         if current_user.is_admin:
@@ -45,8 +41,6 @@ def login():
             # Login user
             login_user(user, remember=form.remember_me.data)
             user.update_last_login()
-            
-            flash(f'Welcome back, {user.email}!', 'success')
             
             # Redirect to next page or dashboard
             next_page = request.args.get('next')
@@ -83,9 +77,6 @@ def register():
         db.session.add(user)
         db.session.commit()
         
-        flash('Account created successfully! You can now log in.', 'success')
-        print("DEBUG: Flash message added to session")
-        print("DEBUG: Session contents:", dict(session))
         return redirect(url_for('auth.login', registered='true'))
     
     return render_template('auth/register.html', form=form)
@@ -95,5 +86,4 @@ def register():
 def logout():
     """Logout user"""
     logout_user()
-    flash('You have been logged out successfully.', 'info')
     return redirect(url_for('auth.login'))

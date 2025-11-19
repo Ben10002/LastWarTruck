@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, session
+from flask import Blueprint, render_template, redirect, url_for, flash, request, session, get_flashed_messages
 from flask_login import login_user, logout_user, current_user
 from models import db
 from models.user import User
@@ -19,6 +19,10 @@ bp = Blueprint('auth', __name__, url_prefix='/auth')
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     """Login page"""
+    # DEBUG: Check flashed messages
+    messages = get_flashed_messages(with_categories=True)
+    print("DEBUG LOGIN: Flash messages found:", messages)
+    
     # Redirect if already logged in
     if current_user.is_authenticated:
         if current_user.is_admin:

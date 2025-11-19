@@ -1,8 +1,8 @@
 import os
 from flask import Flask, render_template, redirect, url_for
+from flask_session import Session
 from config import config
 from models import db, login_manager
-from flask_session import Session
 
 
 def create_app(config_name=None):
@@ -13,10 +13,11 @@ def create_app(config_name=None):
     
     app = Flask(__name__)
     app.config.from_object(config[config_name])
-
-    app.config['SESSION_TYPE'] = 'filesystem'
-    app.config['SESSION_FILE_DIR'] = '/tmp/flask_session'
-    Session(app)
+    
+    # Configure server-side sessions (DISABLED - using cookie sessions)
+    # app.config['SESSION_TYPE'] = 'filesystem'
+    # app.config['SESSION_FILE_DIR'] = '/tmp/flask_session'
+    # Session(app)
     
     # Initialize extensions
     db.init_app(app)
@@ -25,7 +26,7 @@ def create_app(config_name=None):
     login_manager.login_message = 'Please log in to access this page.'
     login_manager.login_message_category = 'warning'
     
-    # User loader für Flask-Login
+    # User loader for Flask-Login
     @login_manager.user_loader
     def load_user(user_id):
         from models.user import User
@@ -45,12 +46,12 @@ def create_app(config_name=None):
     # Error Handlers
     @app.errorhandler(404)
     def not_found(error):
-        return render_template('errors/404.html'), 404
+        return "404 - Page not found", 404
     
     @app.errorhandler(500)
     def internal_error(error):
         db.session.rollback()
-        return render_template('errors/500.html'), 500
+        return "500 - Internal server error", 500
     
     # Create database tables
     with app.app_context():

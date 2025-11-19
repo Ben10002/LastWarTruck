@@ -1,13 +1,12 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, abort
 from functools import wraps
+from datetime import datetime
 from models import db
 from models.user import User
 from models.license import License
 from models.subscription import Subscription
-from models.bot_config import BotConfig, BotLog
-from models.bot_schedule import BotSchedule
-from datetime import datetime
 from models.bot_config import BotConfig, BotLog, BotTimer
+from models.bot_schedule import BotSchedule
 
 bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
 
@@ -129,10 +128,11 @@ def stop_bot():
     if not bot_config or not bot_config.is_running:
         return redirect(url_for('dashboard.index', error='not_running'))
     
-    # Stop bot (will implement later)
-    bot_config.is_running = False
-    bot_config.last_stopped = datetime.utcnow()
-    db.session.commit()
+    # Stop the active timer
+    active_timer = BotTimer.query.filter_by(user_id=user.id, stopped_at=None).first()
+    if active_timer:
+        active_timer.stopped_at = datetime.utcnow()
+        db.session.commit()
     
     BotLog.add_log(user.id, 'info', 'Bot stopped')
     

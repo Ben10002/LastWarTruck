@@ -114,6 +114,9 @@ def start_bot():
     import threading
     from bot_worker import VMOSCloudBot
     
+    # Store user_id for thread (don't pass user object!)
+    bot_user_id = user.id
+    
     def run_bot():
         # Import app inside thread
         from app import create_app
@@ -122,11 +125,13 @@ def start_bot():
         # Push app context for this thread
         with app.app_context():
             try:
-                bot = VMOSCloudBot(user.id)
+                bot = VMOSCloudBot(bot_user_id)  # Use user_id, not user object
                 if bot.start():
                     bot.run()
             except Exception as e:
                 print(f"Bot thread error: {e}")
+                import traceback
+                traceback.print_exc()
     
     bot_thread = threading.Thread(target=run_bot, daemon=True)
     bot_thread.start()

@@ -51,10 +51,10 @@ class VMOSCloudBot:
             'share_alliance_confirm': (400, 750),  # Confirm send in alliance chat
         }
         
-        # OCR regions (L, O, R, U) for reading truck info
+       # OCR regions (L, top, R, bottom) for reading truck info
         self.OCR_REGIONS = {
-            'strength': (200, 950, 300, 1000),  # Truck strength box (left, top, right, bottom)
-            'server': (160, 860, 220, 915),  # Server number box
+            'strength': (240, 970, 340, 1005),  # Moved further right to avoid icon
+            'server': (180, 870, 240, 910),  # Server number box
         }
         
         # Remembered trucks (dict with timestamp)
@@ -273,6 +273,11 @@ class VMOSCloudBot:
             # Read strength
             strength_region = self.OCR_REGIONS['strength']
             strength_img = screenshot[strength_region[1]:strength_region[3], strength_region[0]:strength_region[2]]
+            
+            # DEBUG: Save cropped region
+            cv2.imwrite(f'/tmp/strength_crop_{self.user_id}.png', strength_img)
+            print(f"[DEBUG] Saved strength crop to /tmp/strength_crop_{self.user_id}.png")
+            
             strength_text = pytesseract.image_to_string(strength_img, config='--psm 7')
             
             # Clean up text: remove spaces, replace comma with dot

@@ -16,17 +16,11 @@ class RegistrationFormNoCSRF(RegistrationForm):
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 
+import secrets
+
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     """Login page"""
-    # Check if already logged in via session
-    if session.get('user_id'):
-        user = User.query.get(session.get('user_id'))
-        if user:
-            if user.is_admin:
-                return redirect(url_for('admin.dashboard'))
-            return redirect(url_for('dashboard.index'))
-    
     form = LoginFormNoCSRF()
     
     if form.validate_on_submit():
@@ -39,22 +33,29 @@ def login():
             if not user.is_active:
                 return redirect(url_for('auth.login'))
             
-            # Manual session login
-            print(f"DEBUG LOGIN: Setting session for user {user.id}")
+            # Generate auth token
+            auth_token = secrets.token_urlsafe(32)
+            
+            # Store in session AS BACKUP
             session['user_id'] = user.id
             session['is_admin'] = user.is_admin
+            session['auth_token'] = auth_token
             session.permanent = True
-            print(f"DEBUG LOGIN: Session after set = {dict(session)}")
             
             user.update_last_login()
             db.session.commit()
             
-            print(f"DEBUG LOGIN: About to redirect to admin dashboard")
-            
-            # Redirect based on role
+            # Redirect with token in URL
             if user.is_admin:
-                return redirect(url_for('admin.dashboard'))
-            return redirect(url_for('dashboard.index'))
+                response = redirect(url_for('admin.dashboard'))
+            else:
+                response = redirect(url_for('dashboard.index'))
+            
+            # Set cookie manually with max compatibility
+            response.set_cookie('auth_token', auth_token, max_age=3600, httponly=False, samesite=None)
+            response.set_cookie('user_id', str(user.id), max_age=3600, httponly=False, samesite=None)
+            
+            return response
         else:
             flash('Invalid email or password. Please try again.', 'error')
     

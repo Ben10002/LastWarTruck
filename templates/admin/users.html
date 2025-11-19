@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}User Management - Admin{% endblock %}
+{% block title %}User Management - LKW Bot Admin{% endblock %}
 
 {% block body %}
 <div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
@@ -11,13 +11,12 @@
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
                     <div class="flex-shrink-0 flex items-center">
-                        <div class="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center mr-3">
+                        <div class="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center mr-3">
                             <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                             </svg>
                         </div>
-                        <span class="text-xl font-bold text-slate-900">LKW Bot</span>
-                        <span class="ml-3 px-3 py-1 bg-purple-100 text-purple-700 text-xs font-bold rounded-full">ADMIN</span>
+                        <span class="text-xl font-bold text-slate-900">LKW Bot Admin</span>
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
@@ -27,10 +26,9 @@
                     <a href="{{ url_for('admin.licenses') }}" class="text-sm text-slate-600 hover:text-slate-900 font-medium">
                         Licenses
                     </a>
-                    <a href="{{ url_for('admin.users') }}" class="text-sm text-purple-600 font-bold">
+                    <a href="{{ url_for('admin.users') }}" class="text-sm text-primary-600 font-medium border-b-2 border-primary-600">
                         Users
                     </a>
-                    <span class="text-sm text-slate-600">{{ current_user.email }}</span>
                     <a href="{{ url_for('auth.logout') }}" class="text-sm text-slate-600 hover:text-slate-900 font-medium">
                         Logout
                     </a>
@@ -42,16 +40,10 @@
     <!-- Main Content -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        <div class="flex justify-between items-center mb-8">
-            <h1 class="text-3xl font-bold text-slate-900">User Management</h1>
-        </div>
+        <h1 class="text-3xl font-bold text-slate-900 mb-8">User Management</h1>
         
         <!-- Users Table -->
         <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-200">
-                <h2 class="text-xl font-bold text-slate-900">All Users ({{ users|length }})</h2>
-            </div>
-            
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead class="bg-slate-50">
@@ -60,21 +52,21 @@
                                 Email
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                                Role
+                                Subscription
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                                 Status
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                                Subscription
+                                VMOSCloud
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                                Registered
+                                Joined
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                                 Last Login
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                            <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
                                 Actions
                             </th>
                         </tr>
@@ -83,16 +75,24 @@
                         {% for user in users %}
                         <tr class="hover:bg-slate-50">
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="text-sm font-semibold text-slate-900">{{ user.email }}</span>
+                                <div class="flex items-center">
+                                    <div>
+                                        <div class="text-sm font-semibold text-slate-900">{{ user.email }}</div>
+                                        {% if user.is_admin %}
+                                        <span class="text-xs text-primary-600 font-semibold">Admin</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                {% if user.is_admin %}
-                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
-                                    Admin
+                                {% if user.subscription and user.subscription.is_active %}
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                    Active
                                 </span>
+                                <span class="text-xs text-slate-500">Expires: {{ user.subscription.expires_at.strftime('%Y-%m-%d') }}</span>
                                 {% else %}
-                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                                    User
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                    Inactive
                                 </span>
                                 {% endif %}
                             </td>
@@ -107,17 +107,15 @@
                                 </span>
                                 {% endif %}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
-                                {% if user.subscription %}
-                                    {% if user.subscription.is_active %}
-                                    <span class="text-green-600 font-medium">Active</span>
-                                    <br>
-                                    <span class="text-xs text-slate-500">Expires: {{ user.subscription.expires_at.strftime('%Y-%m-%d') }}</span>
-                                    {% else %}
-                                    <span class="text-red-600">Expired</span>
-                                    {% endif %}
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if user.bot_config and user.bot_config.is_configured %}
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                                    Configured
+                                </span>
                                 {% else %}
-                                <span class="text-slate-400">No subscription</span>
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                                    Not Set
+                                </span>
                                 {% endif %}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
@@ -130,31 +128,47 @@
                                 Never
                                 {% endif %}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm space-x-3">
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 {% if not user.is_admin %}
-                                <!-- Toggle Active/Suspend -->
+                                <!-- Configure Phone Button -->
+                                <a href="{{ url_for('admin.configure_user_phone', user_id=user.id) }}" 
+                                   class="text-blue-600 hover:text-blue-900 mr-3"
+                                   title="Configure VMOSCloud">
+                                    <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    </svg>
+                                </a>
+                                
+                                <!-- Suspend/Activate -->
                                 <form method="POST" action="{{ url_for('admin.toggle_user', user_id=user.id) }}" class="inline">
-                                    <button type="submit" class="{% if user.is_active %}text-orange-600 hover:text-orange-900{% else %}text-green-600 hover:text-green-900{% endif %} font-medium">
-                                        {% if user.is_active %}Suspend{% else %}Activate{% endif %}
+                                    <button type="submit" 
+                                            class="{% if user.is_active %}text-yellow-600 hover:text-yellow-900{% else %}text-green-600 hover:text-green-900{% endif %} mr-3">
+                                        {% if user.is_active %}
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                                        </svg>
+                                        {% else %}
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        {% endif %}
                                     </button>
                                 </form>
                                 
                                 <!-- Delete -->
-                                <form method="POST" action="{{ url_for('admin.delete_user', user_id=user.id) }}" 
-                                      onsubmit="return confirm('Are you sure you want to delete this user? This action cannot be undone.');" class="inline">
-                                    <button type="submit" class="text-red-600 hover:text-red-900 font-medium">
-                                        Delete
+                                <form method="POST" action="{{ url_for('admin.delete_user', user_id=user.id) }}" class="inline">
+                                    <button type="submit" 
+                                            onclick="return confirm('Delete this user? This cannot be undone!')"
+                                            class="text-red-600 hover:text-red-900">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                        </svg>
                                     </button>
                                 </form>
                                 {% else %}
-                                <span class="text-slate-400">-</span>
+                                <span class="text-xs text-slate-400">Admin User</span>
                                 {% endif %}
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="7" class="px-6 py-8 text-center text-slate-500">
-                                No users found.
                             </td>
                         </tr>
                         {% endfor %}

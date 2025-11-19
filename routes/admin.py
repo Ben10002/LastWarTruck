@@ -4,6 +4,7 @@ from models import db
 from models.user import User
 from models.license import License
 from models.subscription import Subscription
+from models.bot_config import BotConfig
 
 bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -144,3 +145,39 @@ def delete_user(user_id):
     
     flash(f'User {user.email} has been deleted.', 'success')
     return redirect(url_for('admin.users'))
+
+
+@bp.route('/users/configure/<int:user_id>', methods=['GET', 'POST'])
+@admin_required
+def configure_user_phone(user_id):
+    """Configure VMOSCloud connection for a user"""
+    user = User.query.get_or_404(user_id)
+    
+    if user.is_admin:
+        flash('Cannot configure admin user.', 'error')
+        return redirect(url_for('admin.users'))
+    
+    # Get or create bot config
+    from models.bot_config import BotConfig
+    bot_config = BotConfig.query.filter_by(user_id=user.id).first()
+    if not bot_config:
+        bot_config = BotConfig(user_id=user.id)
+        db.session.add(bot_config)
+        db.session.commit()
+    
+    if request.method == 'POST':
+        # Update SSH configuration
+        bot_config.ssh_host = request.form.get('ssh_host', '').strip()
+        bot_config.ssh_port = int(request.form.get('ssh_port', 22))
+        bot_config.ssh_user = request.form.get('ssh_user', '').strip()
+        bot_config.ssh_pass = request.form.get('ssh_pass', '').strip()
+        bot_config.adb_port = int(request.form.get('adb_port', 5555))
+        bot_config.screen_width = int(request.form.get('screen_width', 720))
+        bot_config.screen_height = int(request.form.get('screen_height', 1280))
+        
+        db.session.commit()
+        
+        flash(f'VMOSCloud configuration updated for {user.email}!', 'success')
+        return redirect(url_for('admin.users'))
+    
+    return render_template('admin/configure_phone.html', user=user, bot_config=bot_config)

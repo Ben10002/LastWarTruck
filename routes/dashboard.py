@@ -220,7 +220,7 @@ def schedule():
     user = User.query.get_or_404(int(user_id))
     
     # Get user's schedules
-    schedules = BotSchedule.query.filter_by(user_id=user.id).order_by(BotSchedule.day_of_week, BotSchedule.start_time).all()
+    schedules = BotSchedule.query.filter_by(user_id=user.id).order_by(BotSchedule.scheduled_date, BotSchedule.start_time).all()
     
     # Get bot config for defaults
     bot_config = BotConfig.query.filter_by(user_id=user.id).first()

@@ -152,14 +152,30 @@ def configure_bot():
         db.session.commit()
     
     if request.method == 'POST':
-        # Update user-configurable settings only
-        bot_config.interval_minutes = int(request.form.get('interval_minutes', 60))
-        bot_config.share_alliance = request.form.get('share_alliance') == 'on'
-        bot_config.share_world = request.form.get('share_world') == 'on'
-        bot_config.min_strength = int(request.form.get('min_strength', 1000000))
-        bot_config.max_strength = int(request.form.get('max_strength', 10000000))
-        bot_config.server_restriction = request.form.get('server_restriction', 'none')
-        bot_config.language = request.form.get('language', 'en')
+        # Sharing settings - mutually exclusive
+        share_alliance = request.form.get('share_alliance') == 'on'
+        share_world = request.form.get('share_world') == 'on'
+        
+        # Only one can be true
+        if share_alliance and share_world:
+            return redirect(url_for('dashboard.configure_bot', error='both_share'))
+        
+        bot_config.share_alliance = share_alliance
+        bot_config.share_world = share_world
+        
+        # Truck strength (in millions)
+        bot_config.truck_strength = int(request.form.get('truck_strength', 30))
+        
+        # Server restriction
+        bot_config.server_restriction_enabled = request.form.get('server_restriction_enabled') == 'on'
+        if bot_config.server_restriction_enabled:
+            bot_config.server_restriction_value = int(request.form.get('server_restriction_value', 0))
+        else:
+            bot_config.server_restriction_value = None
+        
+        # Timers
+        bot_config.running_timer_minutes = int(request.form.get('running_timer_minutes', 5))
+        bot_config.remember_trucks_hours = int(request.form.get('remember_trucks_hours', 24))
         
         db.session.commit()
         

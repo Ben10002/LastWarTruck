@@ -23,12 +23,13 @@ class BotConfig(db.Model):
     
     # Bot Settings (User-configurable)
     interval_minutes = db.Column(db.Integer, default=60)  # Run every X minutes
-    share_alliance = db.Column(db.Boolean, default=False)  # Share in Alliance (A4O)
-    share_world = db.Column(db.Boolean, default=False)  # Share in World Chat
-    min_strength = db.Column(db.Integer, default=1000000)  # Minimum truck strength
-    max_strength = db.Column(db.Integer, default=10000000)  # Maximum truck strength
-    server_restriction = db.Column(db.String(50), default='none')  # 'none', 'same_server', 'cross_server'
-    language = db.Column(db.String(2), default='en')  # 'de' or 'en'
+    share_alliance = db.Column(db.Boolean, default=False)  # Share in Alliance
+    share_world = db.Column(db.Boolean, default=False)  # Share in World Chat (mutually exclusive)
+    truck_strength = db.Column(db.Integer, default=30)  # Truck strength in millions
+    server_restriction_enabled = db.Column(db.Boolean, default=False)  # Enable server restriction
+    server_restriction_value = db.Column(db.Integer, nullable=True)  # Server number restriction
+    running_timer_minutes = db.Column(db.Integer, default=5)  # Running timer between actions
+    remember_trucks_hours = db.Column(db.Integer, default=24)  # Remember saved trucks for X hours
     
     # Bot Status
     is_running = db.Column(db.Boolean, default=False)
@@ -60,10 +61,11 @@ class BotConfig(db.Model):
             'interval_minutes': self.interval_minutes,
             'share_alliance': self.share_alliance,
             'share_world': self.share_world,
-            'min_strength': self.min_strength,
-            'max_strength': self.max_strength,
-            'server_restriction': self.server_restriction,
-            'language': self.language
+            'truck_strength': self.truck_strength,
+            'server_restriction_enabled': self.server_restriction_enabled,
+            'server_restriction_value': self.server_restriction_value,
+            'running_timer_minutes': self.running_timer_minutes,
+            'remember_trucks_hours': self.remember_trucks_hours
         }
     
     def __repr__(self):

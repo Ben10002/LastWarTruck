@@ -38,33 +38,21 @@
         <h1 class="text-3xl font-bold text-slate-900 mb-2">Bot Configuration</h1>
         <p class="text-slate-600 mb-8">Configure your bot's behavior and sharing settings</p>
         
+        <!-- Error Messages -->
+        {% if request.args.get('error') == 'both_share' %}
+        <div class="mb-6 bg-red-500 shadow-lg rounded-lg p-4">
+            <div class="flex items-start">
+                <svg class="h-6 w-6 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <p class="ml-3 text-sm font-medium text-white">You can only share in Alliance OR World Chat, not both!</p>
+            </div>
+        </div>
+        {% endif %}
+        
         <!-- Configuration Form -->
         <div class="bg-white rounded-xl shadow-lg p-8">
             <form method="POST" class="space-y-8">
-                
-                <!-- Timing Settings -->
-                <div class="border-b border-slate-200 pb-6">
-                    <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center">
-                        <svg class="w-6 h-6 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        Timing Settings
-                    </h3>
-                    
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-2">
-                            Run Interval (minutes)
-                        </label>
-                        <input type="number" 
-                               name="interval_minutes" 
-                               value="{{ bot_config.interval_minutes }}"
-                               min="5"
-                               max="1440"
-                               required
-                               class="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all">
-                        <p class="text-xs text-slate-500 mt-2">How often the bot should run (5-1440 minutes)</p>
-                    </div>
-                </div>
                 
                 <!-- Sharing Settings -->
                 <div class="border-b border-slate-200 pb-6">
@@ -74,17 +62,20 @@
                         </svg>
                         Sharing Settings
                     </h3>
+                    <p class="text-sm text-slate-600 mb-4">⚠️ You can only share in Alliance OR World Chat, not both</p>
                     
                     <div class="space-y-4">
                         <div class="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
                             <div>
-                                <p class="font-semibold text-slate-900">Share in Alliance (A4O)</p>
+                                <p class="font-semibold text-slate-900">Share in Alliance</p>
                                 <p class="text-sm text-slate-600">Share trucks in alliance chat</p>
                             </div>
                             <label class="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" 
                                        name="share_alliance" 
+                                       id="share_alliance"
                                        {% if bot_config.share_alliance %}checked{% endif %}
+                                       onchange="document.getElementById('share_world').checked = false"
                                        class="sr-only peer">
                                 <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
                             </label>
@@ -98,7 +89,9 @@
                             <label class="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" 
                                        name="share_world" 
+                                       id="share_world"
                                        {% if bot_config.share_world %}checked{% endif %}
+                                       onchange="document.getElementById('share_alliance').checked = false"
                                        class="sr-only peer">
                                 <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
                             </label>
@@ -106,43 +99,27 @@
                     </div>
                 </div>
                 
-                <!-- Strength Settings -->
+                <!-- Truck Strength -->
                 <div class="border-b border-slate-200 pb-6">
                     <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center">
                         <svg class="w-6 h-6 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                         </svg>
-                        Truck Strength Range
+                        Truck Strength (in M)
                     </h3>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-semibold text-slate-700 mb-2">
-                                Minimum Strength
-                            </label>
-                            <input type="number" 
-                                   name="min_strength" 
-                                   value="{{ bot_config.min_strength }}"
-                                   min="0"
-                                   step="100000"
-                                   required
-                                   class="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all">
-                            <p class="text-xs text-slate-500 mt-1">Minimum truck strength to share</p>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-semibold text-slate-700 mb-2">
-                                Maximum Strength
-                            </label>
-                            <input type="number" 
-                                   name="max_strength" 
-                                   value="{{ bot_config.max_strength }}"
-                                   min="0"
-                                   step="100000"
-                                   required
-                                   class="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all">
-                            <p class="text-xs text-slate-500 mt-1">Maximum truck strength to share</p>
-                        </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                            Strength in Millions
+                        </label>
+                        <input type="number" 
+                               name="truck_strength" 
+                               value="{{ bot_config.truck_strength }}"
+                               min="1"
+                               max="999"
+                               required
+                               class="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all">
+                        <p class="text-xs text-slate-500 mt-1">Enter truck strength in millions (e.g., 30 = 30M)</p>
                     </div>
                 </div>
                 
@@ -155,52 +132,77 @@
                         Server Restriction
                     </h3>
                     
-                    <select name="server_restriction" 
-                            class="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all">
-                        <option value="none" {% if bot_config.server_restriction == 'none' %}selected{% endif %}>
-                            No Restriction (All Servers)
-                        </option>
-                        <option value="same_server" {% if bot_config.server_restriction == 'same_server' %}selected{% endif %}>
-                            Same Server Only
-                        </option>
-                        <option value="cross_server" {% if bot_config.server_restriction == 'cross_server' %}selected{% endif %}>
-                            Cross-Server Only
-                        </option>
-                    </select>
-                    <p class="text-xs text-slate-500 mt-2">Restrict which servers can receive your trucks</p>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                            <div>
+                                <p class="font-semibold text-slate-900">Enable Server Restriction</p>
+                                <p class="text-sm text-slate-600">Restrict trucks to specific server</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" 
+                                       name="server_restriction_enabled" 
+                                       id="server_restriction_toggle"
+                                       {% if bot_config.server_restriction_enabled %}checked{% endif %}
+                                       onchange="document.getElementById('server_value').disabled = !this.checked"
+                                       class="sr-only peer">
+                                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+                            </label>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                Server Number
+                            </label>
+                            <input type="number" 
+                                   name="server_restriction_value" 
+                                   id="server_value"
+                                   value="{{ bot_config.server_restriction_value or '' }}"
+                                   min="1"
+                                   {% if not bot_config.server_restriction_enabled %}disabled{% endif %}
+                                   placeholder="Enter server number"
+                                   class="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed">
+                            <p class="text-xs text-slate-500 mt-1">Only share trucks on this server</p>
+                        </div>
+                    </div>
                 </div>
                 
-                <!-- Language -->
-                <div>
+                <!-- Timers -->
+                <div class="border-b border-slate-200 pb-6">
                     <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center">
                         <svg class="w-6 h-6 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        Language
+                        Timer Settings
                     </h3>
                     
-                    <div class="flex space-x-4">
-                        <label class="flex-1 cursor-pointer">
-                            <input type="radio" 
-                                   name="language" 
-                                   value="en" 
-                                   {% if bot_config.language == 'en' %}checked{% endif %}
-                                   class="sr-only peer">
-                            <div class="p-4 text-center border-2 border-slate-200 rounded-lg peer-checked:border-primary-500 peer-checked:bg-primary-50 transition-all">
-                                <p class="font-semibold text-slate-900">🇬🇧 English</p>
-                            </div>
-                        </label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                Running Timer (minutes)
+                            </label>
+                            <input type="number" 
+                                   name="running_timer_minutes" 
+                                   value="{{ bot_config.running_timer_minutes }}"
+                                   min="1"
+                                   max="60"
+                                   required
+                                   class="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all">
+                            <p class="text-xs text-slate-500 mt-1">Time between bot actions</p>
+                        </div>
                         
-                        <label class="flex-1 cursor-pointer">
-                            <input type="radio" 
-                                   name="language" 
-                                   value="de" 
-                                   {% if bot_config.language == 'de' %}checked{% endif %}
-                                   class="sr-only peer">
-                            <div class="p-4 text-center border-2 border-slate-200 rounded-lg peer-checked:border-primary-500 peer-checked:bg-primary-50 transition-all">
-                                <p class="font-semibold text-slate-900">🇩🇪 Deutsch</p>
-                            </div>
-                        </label>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                Remember Trucks (hours)
+                            </label>
+                            <input type="number" 
+                                   name="remember_trucks_hours" 
+                                   value="{{ bot_config.remember_trucks_hours }}"
+                                   min="1"
+                                   max="168"
+                                   required
+                                   class="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all">
+                            <p class="text-xs text-slate-500 mt-1">How long to remember saved trucks</p>
+                        </div>
                     </div>
                 </div>
                 

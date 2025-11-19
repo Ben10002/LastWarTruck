@@ -1,58 +1,50 @@
 import os
-from datetime import timedelta
-from dotenv import load_dotenv
-
-load_dotenv()  # Load environment variables from .env file
 
 class Config:
-    """Base configuration for the application"""
-    
-    # Flask
+    """Base configuration"""
+    # Security
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
+    
+    # Session Configuration
+    SESSION_TYPE = 'filesystem'
+    SESSION_FILE_DIR = '/tmp/flask_session'
     SESSION_PERMANENT = False
-    PERMANENT_SESSION_LIFETIME = 3600  # 1 hour
+    SESSION_USE_SIGNER = True
+    SESSION_KEY_PREFIX = 'lkwbot_'
+    
+    # Cookie Settings
+    SESSION_COOKIE_NAME = 'lkwbot_session'
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SECURE = False
+    SESSION_COOKIE_SAMESITE = None  # CRITICAL!
+    SESSION_COOKIE_PATH = '/'
+    SESSION_COOKIE_DOMAIN = None
+    
+    # Flask-Login
+    REMEMBER_COOKIE_HTTPONLY = True
+    REMEMBER_COOKIE_SECURE = False
+    REMEMBER_COOKIE_SAMESITE = None
     
     # Database
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///lkw_bot.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
-    # Session
-    PERMANENT_SESSION_LIFETIME = timedelta(days=7)
-    SESSION_COOKIE_SECURE = False
-    SESSION_COOKIE_HTTPONLY = True
-    SESSION_COOKIE_SAMESITE = 'Lax'
-    SESSION_COOKIE_DOMAIN = None
-    REMEMBER_COOKIE_HTTPONLY = True
-    REMEMBER_COOKIE_SECURE = False
-    REMEMBER_COOKIE_SAMESITE = 'Lax'
-    
     # Admin
-    ADMIN_EMAIL = 'leerzeichen183@gmail.com'  # Change this later
-    
-    # Bot
-    BOT_DEFAULT_SCREEN_WIDTH = 720
-    BOT_DEFAULT_SCREEN_HEIGHT = 1280
-    MAINTENANCE_MODE = False  # Global maintenance mode
-    
-    # Subscription
-    DEFAULT_SUBSCRIPTION_DAYS = 30
-    MONTHLY_PRICE = 15.0  # Euro
+    ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL') or 'admin@lkwbot.com'
 
 
 class DevelopmentConfig(Config):
     """Development configuration"""
     DEBUG = True
-    TESTING = False
 
 
 class ProductionConfig(Config):
     """Production configuration"""
     DEBUG = False
-    TESTING = False
-    SESSION_COOKIE_SECURE = True  # HTTPS required
+    SESSION_COOKIE_SECURE = True
+    REMEMBER_COOKIE_SECURE = True
 
 
-# Config auswählen basierend auf Environment Variable
 config = {
     'development': DevelopmentConfig,
     'production': ProductionConfig,

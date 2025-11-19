@@ -63,9 +63,45 @@ class VMOSCloudBot:
         self.log(f"Bot initialized for user {self.user.email}")
     
     def log(self, message, level='info'):
-        """Add log entry"""
+        """Add log entry - simplified for users"""
+        # Only log to console in debug mode
         print(f"[BOT {self.user_id}] {message}")
-        BotLog.add_log(self.user_id, level, message)
+        
+        # Simplified messages for user
+        user_messages = {
+            # Connection
+            'Setting up SSH tunnel...': 'Connecting...',
+            'SSH tunnel established successfully': 'Connected',
+            'Connecting ADB...': 'Connecting to device...',
+            'ADB connected successfully': 'Device connected',
+            'Bot started successfully!': 'Bot started',
+            'Starting main bot loop...': 'Searching for trucks...',
+            
+            # Cleanup
+            'Cleaning up old tunnels...': None,  # Don't show
+            'Waiting for tunnel to stabilize...': None,  # Don't show
+            'Bot stop signal received, exiting loop': 'Stopping bot...',
+            'Cleaning up...': None,  # Don't show
+            'Cleanup complete': 'Bot stopped',
+            
+            # Debug logs - don't show to user
+            'Screenshot saved to': None,
+            'Template:': None,
+            'Screenshot shape:': None,
+            'Match confidence:': None,
+        }
+        
+        # Check if we should simplify or skip this message
+        user_message = message
+        for key, simplified in user_messages.items():
+            if message.startswith(key):
+                if simplified is None:
+                    return  # Skip this log
+                user_message = simplified
+                break
+        
+        # Log to database (visible to user)
+        BotLog.add_log(self.user_id, level, user_message)
     
     def start(self):
         """Start the bot"""
@@ -197,30 +233,21 @@ class VMOSCloudBot:
             result = cv2.matchTemplate(screenshot, template, cv2.TM_CCOEFF_NORMED)
             min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
             
-            # DEBUG: Save screenshot and template for inspection
-            debug_path = f'/tmp/debug_screenshot_{self.user_id}.png'
-            cv2.imwrite(debug_path, screenshot)
-            self.log(f"Screenshot saved to {debug_path} for debugging")
-            self.log(f"Template: {self.template_path}, exists: {os.path.exists(self.template_path)}")
-            self.log(f"Screenshot shape: {screenshot.shape}, Template shape: {template.shape}")
-            self.log(f"Match confidence: {max_val:.4f} (threshold: 0.7)")
-            
-            # Threshold
-            threshold = 0.7
+            # Threshold (lowered for testing)
+            threshold = 0.50
             if max_val >= threshold:
                 # Get center coordinates
                 h, w = template.shape[:2]
                 center_x = max_loc[0] + w // 2
                 center_y = max_loc[1] + h // 2
                 
-                self.log(f"Truck found at ({center_x}, {center_y}) with {max_val:.2%} confidence", 'success')
+                self.log(f"Truck found", 'success')
                 return (center_x, center_y)
             else:
-                self.log(f"No truck found (best match: {max_val:.2%}, threshold: {threshold:.2%})", 'info')
-                return None
+                return None  # No log needed, happens often
                 
         except Exception as e:
-            self.log(f"Template matching error: {e}", 'error')
+            self.log(f"Error finding truck: {e}", 'error')
             return None
     
     def tap(self, x, y):
@@ -263,7 +290,6 @@ class VMOSCloudBot:
             if server_match:
                 info['server'] = int(server_match.group(1))
             
-            self.log(f"Read truck info: {info}")
             return info
             
         except Exception as e:
@@ -275,13 +301,13 @@ class VMOSCloudBot:
         # Check strength limit
         if 'strength' in truck_info:
             if truck_info['strength'] > self.config.truck_strength:
-                self.log(f"Truck too strong: {truck_info['strength']}M > {self.config.truck_strength}M", 'warning')
+                self.log(f"Truck too strong ({truck_info['strength']}M), skipping", 'info')
                 return False
         
         # Check server restriction
         if self.config.server_restriction_enabled and 'server' in truck_info:
             if truck_info['server'] != self.config.server_restriction_value:
-                self.log(f"Wrong server: {truck_info['server']} != {self.config.server_restriction_value}", 'warning')
+                self.log(f"Wrong server (#{truck_info['server']}), skipping", 'info')
                 return False
         
         return True
@@ -289,59 +315,50 @@ class VMOSCloudBot:
     def share_truck(self, truck_coords):
         """Share truck in chat"""
         try:
-            self.log(f"Sharing truck at {truck_coords}...")
+            self.log(f"Checking truck...")
             
             # 1. Click on truck icon
             if not self.tap(truck_coords[0], truck_coords[1]):
                 return False
             
-            time.sleep(1.5)  # Wait for truck details to load
+            time.sleep(1.5)
             
-            # 2. Read truck info (OCR for strength, server)
+            # 2. Read truck info
             truck_info = self.read_truck_info()
             
-            # 3. Validate truck (strength, server restrictions)
+            # 3. Validate truck
             if not self.validate_truck(truck_info):
-                self.log("Truck doesn't meet criteria, skipping")
-                self.tap(self.COORDS['refresh'][0], self.COORDS['refresh'][1])  # Refresh/close
+                self.tap(self.COORDS['refresh'][0], self.COORDS['refresh'][1])
                 return False
             
-            # 4. Click share button
+            # 4. Share button
             if not self.tap(self.COORDS['share'][0], self.COORDS['share'][1]):
                 return False
             
             time.sleep(1)
             
-            # 5. Share in alliance or world
+            # 5. Share in chat
             if self.config.share_alliance:
-                # Select alliance channel
-                if not self.tap(self.COORDS['share_alliance_channel'][0], self.COORDS['share_alliance_channel'][1]):
-                    return False
+                self.tap(self.COORDS['share_alliance_channel'][0], self.COORDS['share_alliance_channel'][1])
                 time.sleep(0.5)
-                # Confirm send
-                if not self.tap(self.COORDS['share_alliance_confirm'][0], self.COORDS['share_alliance_confirm'][1]):
-                    return False
+                self.tap(self.COORDS['share_alliance_confirm'][0], self.COORDS['share_alliance_confirm'][1])
+                self.log(f"Shared in Alliance", 'success')
             elif self.config.share_world:
-                # Select world channel
-                if not self.tap(self.COORDS['share_world_channel'][0], self.COORDS['share_world_channel'][1]):
-                    return False
+                self.tap(self.COORDS['share_world_channel'][0], self.COORDS['share_world_channel'][1])
                 time.sleep(0.5)
-                # Confirm send
-                if not self.tap(self.COORDS['share_world_confirm'][0], self.COORDS['share_world_confirm'][1]):
-                    return False
-            
-            self.log(f"Truck shared successfully! Strength: {truck_info.get('strength', 'N/A')}, Server: {truck_info.get('server', 'N/A')}", 'success')
+                self.tap(self.COORDS['share_world_confirm'][0], self.COORDS['share_world_confirm'][1])
+                self.log(f"Shared in World", 'success')
             
             time.sleep(1)
             
-            # 6. Click refresh to search for next truck
+            # 6. Refresh
             self.tap(self.COORDS['refresh'][0], self.COORDS['refresh'][1])
             time.sleep(1)
             
             return True
             
         except Exception as e:
-            self.log(f"Share truck error: {e}", 'error')
+            self.log(f"Error sharing: {e}", 'error')
             return False
     
     def run_cycle(self):
@@ -376,7 +393,6 @@ class VMOSCloudBot:
         try:
             self.log("Starting main bot loop...")
             
-            cycle_count = 0
             while True:
                 # Check if bot should stop (DB query in each cycle)
                 timer = BotTimer.query.filter_by(user_id=self.user_id, stopped_at=None).first()
@@ -384,12 +400,7 @@ class VMOSCloudBot:
                     self.log("Bot stop signal received, exiting loop")
                     break
                 
-                cycle_count += 1
-                self.log(f"--- Cycle {cycle_count} ---")
-                
                 self.run_cycle()
-                
-                # Wait before next cycle
                 time.sleep(3)
                 
         except KeyboardInterrupt:

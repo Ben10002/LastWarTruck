@@ -102,21 +102,25 @@ class BotTimer(db.Model):
     user = db.relationship('User', backref=db.backref('bot_timers', lazy='dynamic'))
     
     @property
-    def duration_minutes(self):
-        """Get duration in minutes"""
-        if self.stopped_at:
-            delta = self.stopped_at - self.started_at
-        else:
-            delta = datetime.utcnow() - self.started_at
-        return int(delta.total_seconds() / 60)
+    def is_configured(self):
+        """Check if bot is fully configured (by admin)"""
+        return all([
+            self.ssh_host,
+            self.ssh_port,
+            self.ssh_username,
+            self.ssh_key,
+            self.adb_proxy_port
+        ])
     
     @property
     def is_running(self):
-        """Check if timer is still running"""
-        return self.stopped_at is None
-    
-    def __repr__(self):
-        return f'<BotTimer User:{self.user_id} Started:{self.started_at}>'
+        """Check if bot is currently running"""
+        from models.bot_config import BotTimer
+        active_timer = BotTimer.query.filter_by(
+            user_id=self.user_id,
+            stopped_at=None
+        ).first()
+        return active_timer is not None
 
 
 class BotLog(db.Model):

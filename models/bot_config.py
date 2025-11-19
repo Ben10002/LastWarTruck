@@ -11,11 +11,12 @@ class BotConfig(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
     
     # VMOSCloud SSH Connection (Admin-managed)
-    ssh_host = db.Column(db.String(255), nullable=True)
-    ssh_port = db.Column(db.Integer, default=22)
-    ssh_user = db.Column(db.String(100), nullable=True)
-    ssh_pass = db.Column(db.String(255), nullable=True)  # Encrypt in production!
-    adb_port = db.Column(db.Integer, default=5555)
+    ssh_host = db.Column(db.String(255), nullable=True)  # e.g., 103.237.100.130
+    ssh_port = db.Column(db.Integer, default=22)  # e.g., 1824
+    ssh_username = db.Column(db.String(255), nullable=True)  # e.g., 10.0.8.67_1763575271849@103.237.100.130
+    ssh_key = db.Column(db.Text, nullable=True)  # Connection key (base64)
+    adb_proxy_port = db.Column(db.Integer, nullable=True)  # e.g., 39131
+    local_adb_port = db.Column(db.Integer, default=7071)  # Local port for ADB
     
     # Screen Settings (Admin-managed)
     screen_width = db.Column(db.Integer, default=720)
@@ -44,8 +45,10 @@ class BotConfig(db.Model):
         """Check if bot is fully configured (by admin)"""
         return all([
             self.ssh_host,
-            self.ssh_user,
-            self.ssh_pass
+            self.ssh_port,
+            self.ssh_username,
+            self.ssh_key,
+            self.adb_proxy_port
         ])
     
     def to_dict(self):

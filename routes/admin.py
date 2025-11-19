@@ -169,9 +169,10 @@ def configure_user_phone(user_id):
         # Update SSH configuration
         bot_config.ssh_host = request.form.get('ssh_host', '').strip()
         bot_config.ssh_port = int(request.form.get('ssh_port', 22))
-        bot_config.ssh_user = request.form.get('ssh_user', '').strip()
-        bot_config.ssh_pass = request.form.get('ssh_pass', '').strip()
-        bot_config.adb_port = int(request.form.get('adb_port', 5555))
+        bot_config.ssh_username = request.form.get('ssh_username', '').strip()
+        bot_config.ssh_key = request.form.get('ssh_key', '').strip()
+        bot_config.adb_proxy_port = int(request.form.get('adb_proxy_port')) if request.form.get('adb_proxy_port') else None
+        bot_config.local_adb_port = int(request.form.get('local_adb_port', 7071))
         bot_config.screen_width = int(request.form.get('screen_width', 720))
         bot_config.screen_height = int(request.form.get('screen_height', 1280))
         

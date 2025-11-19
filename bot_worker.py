@@ -57,8 +57,8 @@ class VMOSCloudBot:
             'server': (160, 860, 220, 915),  # Server number box
         }
         
-        # Remembered trucks (to avoid re-sharing)
-        self.shared_trucks = set()
+        # Remembered trucks (dict with timestamp)
+        self.shared_trucks = {}  # Format: {strength: timestamp}
         
         self.log(f"Bot initialized for user {self.user.email}")
     
@@ -275,49 +275,68 @@ class VMOSCloudBot:
             strength_img = screenshot[strength_region[1]:strength_region[3], strength_region[0]:strength_region[2]]
             strength_text = pytesseract.image_to_string(strength_img, config='--psm 7')
             
-            # DEBUG: Log raw OCR output
-            print(f"[DEBUG] Strength OCR raw text: '{strength_text}'")
+            # Clean up text: remove spaces, replace comma with dot
+            strength_text_clean = strength_text.strip().replace(' ', '').replace(',', '.')
             
-            # Extract number (e.g., "65.5M" -> 65.5)
-            strength_match = re.search(r'([\d.]+)', strength_text)
+            # Extract all numbers and concatenate (e.g., "73.2M" or "9.73M")
+            # Find pattern like "73.2M" or "9.73M"
+            strength_match = re.search(r'(\d+\.?\d*)M', strength_text_clean, re.IGNORECASE)
             if strength_match:
                 info['strength'] = float(strength_match.group(1))
-                print(f"[DEBUG] Parsed strength: {info['strength']}")
+                print(f"[DEBUG] Parsed strength: {info['strength']}M from '{strength_text}' -> '{strength_text_clean}'")
             else:
-                print(f"[DEBUG] Could not parse strength from: '{strength_text}'")
+                print(f"[DEBUG] Could not parse strength from: '{strength_text}' -> '{strength_text_clean}'")
             
             # Read server
             server_region = self.OCR_REGIONS['server']
             server_img = screenshot[server_region[1]:server_region[3], server_region[0]:server_region[2]]
-            server_text = pytesseract.image_to_string(server_img, config='--psm 7')
             
-            # DEBUG: Log raw OCR output
-            print(f"[DEBUG] Server OCR raw text: '{server_text}'")
+            # Preprocess image for better OCR
+            gray = cv2.cvtColor(server_img, cv2.COLOR_BGR2GRAY)
+            # Increase contrast
+            gray = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+            
+            server_text = pytesseract.image_to_string(gray, config='--psm 7 digits')
             
             # Extract number (e.g., "#49" -> 49)
-            server_match = re.search(r'#?(\d+)', server_text)
+            server_match = re.search(r'(\d+)', server_text)
             if server_match:
                 info['server'] = int(server_match.group(1))
-                print(f"[DEBUG] Parsed server: {info['server']}")
+                print(f"[DEBUG] Parsed server: #{info['server']} from '{server_text}'")
             else:
                 print(f"[DEBUG] Could not parse server from: '{server_text}'")
             
             print(f"[DEBUG] Final truck_info: {info}")
-            print(f"[DEBUG] User's strength limit: {self.config.truck_strength}")
             
             return info
             
         except Exception as e:
             self.log(f"OCR error: {e}", 'error')
+            import traceback
+            traceback.print_exc()
             return {}
     
     def validate_truck(self, truck_info):
         """Validate if truck meets user's criteria"""
-        # Check strength limit
-        if 'strength' in truck_info:
-            if truck_info['strength'] > self.config.truck_strength:
-                self.log(f"Truck too strong ({truck_info['strength']}M), skipping", 'info')
+        # Check if we have strength info
+        if 'strength' not in truck_info:
+            self.log("Cannot read truck strength, skipping", 'warning')
+            return False
+        
+        strength = truck_info['strength']
+        
+        # Check if already shared recently
+        if strength in self.shared_trucks:
+            time_diff = time.time() - self.shared_trucks[strength]
+            hours_passed = time_diff / 3600
+            if hours_passed < self.config.remember_trucks_hours:
+                self.log(f"Already shared {strength}M recently, skipping", 'info')
                 return False
+        
+        # Check strength limit
+        if strength > self.config.truck_strength:
+            self.log(f"Truck too strong ({strength}M > {self.config.truck_strength}M), skipping", 'info')
+            return False
         
         # Check server restriction
         if self.config.server_restriction_enabled and 'server' in truck_info:
@@ -357,12 +376,16 @@ class VMOSCloudBot:
                 self.tap(self.COORDS['share_alliance_channel'][0], self.COORDS['share_alliance_channel'][1])
                 time.sleep(0.5)
                 self.tap(self.COORDS['share_alliance_confirm'][0], self.COORDS['share_alliance_confirm'][1])
-                self.log(f"Shared in Alliance", 'success')
+                self.log(f"Shared {truck_info.get('strength', '?')}M in Alliance", 'success')
             elif self.config.share_world:
                 self.tap(self.COORDS['share_world_channel'][0], self.COORDS['share_world_channel'][1])
                 time.sleep(0.5)
                 self.tap(self.COORDS['share_world_confirm'][0], self.COORDS['share_world_confirm'][1])
-                self.log(f"Shared in World", 'success')
+                self.log(f"Shared {truck_info.get('strength', '?')}M in World", 'success')
+            
+            # Remember this truck
+            if 'strength' in truck_info:
+                self.shared_trucks[truck_info['strength']] = time.time()
             
             time.sleep(1)
             
@@ -389,12 +412,10 @@ class VMOSCloudBot:
             if truck_coords is None:
                 # Click refresh to search for new trucks
                 self.tap(self.COORDS['refresh'][0], self.COORDS['refresh'][1])
-                return True  # No truck found is not an error
+                return True
             
             # Share truck
             if self.share_truck(truck_coords):
-                # Remember this truck (simple coord-based for now)
-                self.shared_trucks.add(truck_coords)
                 return True
             
             return False

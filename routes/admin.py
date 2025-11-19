@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
-from flask_login import login_required, current_user
+from flask_login import current_user
 from functools import wraps
 from flask import abort
 from models import db
@@ -21,7 +21,6 @@ def admin_required(f):
 
 
 @bp.route('/dashboard')
-@login_required
 @admin_required
 def dashboard():
     """Admin dashboard"""
@@ -39,7 +38,6 @@ def dashboard():
 
 
 @bp.route('/licenses')
-@login_required
 @admin_required
 def licenses():
     """View and manage licenses"""
@@ -48,7 +46,6 @@ def licenses():
 
 
 @bp.route('/licenses/generate', methods=['POST'])
-@login_required
 @admin_required
 def generate_license():
     """Generate new license key"""
@@ -78,7 +75,6 @@ def generate_license():
 
 
 @bp.route('/licenses/delete/<int:license_id>', methods=['POST'])
-@login_required
 @admin_required
 def delete_license(license_id):
     """Delete a license key"""
@@ -96,7 +92,6 @@ def delete_license(license_id):
 
 
 @bp.route('/users')
-@login_required
 @admin_required
 def users():
     """View and manage users"""
@@ -105,7 +100,6 @@ def users():
 
 
 @bp.route('/users/toggle/<int:user_id>', methods=['POST'])
-@login_required
 @admin_required
 def toggle_user(user_id):
     """Suspend/Activate user"""
@@ -124,7 +118,6 @@ def toggle_user(user_id):
 
 
 @bp.route('/users/delete/<int:user_id>', methods=['POST'])
-@login_required
 @admin_required
 def delete_user(user_id):
     """Delete a user"""

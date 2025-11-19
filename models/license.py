@@ -31,36 +31,31 @@ class License(db.Model):
         return key
     
     def redeem(self, user):
-        """Redeem license key for a user"""
-        if self.is_redeemed:
-            return False
-        
-        self.is_redeemed = True
-        self.user_id = user.id
-        self.redeemed_at = datetime.utcnow()
-        self.expires_at = datetime.utcnow() + timedelta(days=self.duration_days)
-        
-        # Update or create user subscription
-        from .subscription import Subscription
-        subscription = Subscription.query.filter_by(user_id=user.id).first()
-        
-        if subscription:
-            # Extend existing subscription
-            if subscription.end_date and subscription.end_date > datetime.utcnow():
-                subscription.end_date = subscription.end_date + timedelta(days=self.duration_days)
-            else:
-                subscription.start_date = datetime.utcnow()
-                subscription.end_date = datetime.utcnow() + timedelta(days=self.duration_days)
-        else:
-            # Create new subscription
-            subscription = Subscription(
-                user_id=user.id,
-                start_date=datetime.utcnow(),
-                end_date=datetime.utcnow() + timedelta(days=self.duration_days)
-            )
-            db.session.add(subscription)
-        
-        return True
+    """Redeem license key for a user"""
+    if self.is_redeemed:
+        return False
+    
+    self.is_redeemed = True
+    self.user_id = user.id
+    self.redeemed_at = datetime.utcnow()
+    self.expires_at = datetime.utcnow() + timedelta(days=self.duration_days)
+    
+    # Update or create user subscription
+    from .subscription import Subscription
+    subscription = Subscription.query.filter_by(user_id=user.id).first()
+    
+    if subscription:
+        # Extend existing subscription using the extend method
+        subscription.extend(self.duration_days)
+    else:
+        # Create new subscription
+        subscription = Subscription(
+            user_id=user.id,
+            expires_at=datetime.utcnow() + timedelta(days=self.duration_days)
+        )
+        db.session.add(subscription)
+    
+    return True
     
     @property
     def is_valid(self):

@@ -20,7 +20,7 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <span class="text-sm text-slate-600">{{ current_user.email }}</span>
+                    <span class="text-sm text-slate-600">{{ user.email }}</span>
                     <a href="{{ url_for('auth.logout') }}" class="text-sm text-slate-600 hover:text-slate-900 font-medium">
                         Logout
                     </a>
@@ -34,43 +34,125 @@
         
         <h1 class="text-3xl font-bold text-slate-900 mb-8">Dashboard</h1>
         
-        <!-- Welcome Message -->
+        <!-- Subscription Status Card -->
         <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
-            <h2 class="text-2xl font-bold text-slate-900 mb-4">Welcome, {{ current_user.email }}!</h2>
-            <p class="text-slate-600">Your user dashboard is coming soon. Here you'll be able to:</p>
-            <ul class="mt-4 space-y-2 text-slate-600">
-                <li class="flex items-center">
-                    <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    View your subscription status
-                </li>
-                <li class="flex items-center">
-                    <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    Redeem license keys
-                </li>
-                <li class="flex items-center">
-                    <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    Configure your bot settings
-                </li>
-                <li class="flex items-center">
-                    <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    Start and stop your bot
-                </li>
-                <li class="flex items-center">
-                    <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    View bot logs
-                </li>
-            </ul>
+            <h2 class="text-2xl font-bold text-slate-900 mb-6">Subscription Status</h2>
+            
+            {% if subscription and subscription.is_active %}
+            <div class="flex items-center space-x-4 p-6 bg-green-50 rounded-lg border-2 border-green-200">
+                <svg class="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <div class="flex-1">
+                    <p class="text-lg font-bold text-green-900">Active Subscription</p>
+                    <p class="text-sm text-green-700">
+                        Expires on: <strong>{{ subscription.end_date.strftime('%B %d, %Y') }}</strong>
+                    </p>
+                    <p class="text-xs text-green-600 mt-1">
+                        {{ subscription.days_remaining }} days remaining
+                    </p>
+                </div>
+            </div>
+            {% else %}
+            <div class="flex items-center space-x-4 p-6 bg-red-50 rounded-lg border-2 border-red-200">
+                <svg class="w-12 h-12 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <div class="flex-1">
+                    <p class="text-lg font-bold text-red-900">No Active Subscription</p>
+                    <p class="text-sm text-red-700">Please redeem a license key to activate your subscription.</p>
+                </div>
+            </div>
+            {% endif %}
         </div>
+        
+        <!-- Redeem License Key Card -->
+        <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+            <h2 class="text-2xl font-bold text-slate-900 mb-6">Redeem License Key</h2>
+            
+            <form method="POST" action="{{ url_for('dashboard.redeem_license') }}" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">
+                        Enter License Key
+                    </label>
+                    <input type="text" 
+                           name="license_key" 
+                           placeholder="XXXX-XXXX-XXXX-XXXX"
+                           required
+                           class="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all font-mono uppercase"
+                           pattern="[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}"
+                           maxlength="19">
+                    <p class="text-xs text-slate-500 mt-2">Format: XXXX-XXXX-XXXX-XXXX</p>
+                </div>
+                
+                <button type="submit" 
+                        class="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all">
+                    Activate License
+                </button>
+            </form>
+        </div>
+        
+        <!-- License History -->
+        {% if licenses %}
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-200">
+                <h2 class="text-xl font-bold text-slate-900">License History</h2>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                License Key
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                Duration
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                Redeemed On
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                Expires On
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                Status
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-slate-200">
+                        {% for license in licenses %}
+                        <tr class="hover:bg-slate-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="font-mono text-sm font-semibold text-slate-900">{{ license.key }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
+                                {{ license.duration_days }} days
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
+                                {{ license.redeemed_at.strftime('%Y-%m-%d %H:%M') }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
+                                {{ license.expires_at.strftime('%Y-%m-%d %H:%M') }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if license.is_valid %}
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                    Active
+                                </span>
+                                {% else %}
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                    Expired
+                                </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
         
     </div>
 </div>

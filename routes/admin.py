@@ -103,4 +103,54 @@ def delete_license(license_id):
     license = License.query.get_or_404(license_id)
     
     if license.is_redeemed:
-        flash('Cannot delete redeemed
+        flash('Cannot delete redeemed license.', 'error')
+        return redirect(url_for('admin.licenses'))
+    
+    db.session.delete(license)
+    db.session.commit()
+    
+    flash('License deleted successfully.', 'success')
+    return redirect(url_for('admin.licenses'))
+
+
+@bp.route('/users')
+@admin_required
+def users():
+    """View and manage users"""
+    users = User.query.order_by(User.created_at.desc()).all()
+    return render_template('admin/users.html', users=users)
+
+
+@bp.route('/users/toggle/<int:user_id>', methods=['POST'])
+@admin_required
+def toggle_user(user_id):
+    """Suspend/Activate user"""
+    user = User.query.get_or_404(user_id)
+    
+    if user.is_admin:
+        flash('Cannot modify admin user.', 'error')
+        return redirect(url_for('admin.users'))
+    
+    user.is_active = not user.is_active
+    db.session.commit()
+    
+    status = 'activated' if user.is_active else 'suspended'
+    flash(f'User {user.email} has been {status}.', 'success')
+    return redirect(url_for('admin.users'))
+
+
+@bp.route('/users/delete/<int:user_id>', methods=['POST'])
+@admin_required
+def delete_user(user_id):
+    """Delete a user"""
+    user = User.query.get_or_404(user_id)
+    
+    if user.is_admin:
+        flash('Cannot delete admin user.', 'error')
+        return redirect(url_for('admin.users'))
+    
+    db.session.delete(user)
+    db.session.commit()
+    
+    flash(f'User {user.email} has been deleted.', 'success')
+    return redirect(url_for('admin.users'))

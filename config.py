@@ -9,6 +9,8 @@ class Config:
     
     # Flask
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
+    SESSION_PERMANENT = False
+    PERMANENT_SESSION_LIFETIME = 3600  # 1 hour
     
     # Database
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///lkw_bot.db'

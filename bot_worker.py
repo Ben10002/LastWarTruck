@@ -25,6 +25,7 @@ class VMOSCloudBot:
         # SSH Tunnel
         self.ssh_tunnel_process = None
         self.adb_connected = False
+        self.ssh_key_file = None  # For cleanup
         
         # Template path
         self.template_path = os.path.join(os.path.dirname(__file__), 'static/templates/rentier_template.png')
@@ -93,30 +94,50 @@ class VMOSCloudBot:
         try:
             self.log("Setting up SSH tunnel...")
             
-            # Build SSH command
+            # Write SSH key to temporary file
+            import tempfile
+            with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='_vmoskey') as key_file:
+                key_file.write(self.config.ssh_key)
+                key_file_path = key_file.name
+            
+            # Set permissions (SSH requires 600)
+            os.chmod(key_file_path, 0o600)
+            
+            # Build SSH command with key file
             ssh_cmd = [
                 'ssh',
+                '-i', key_file_path,  # Use key file
                 '-oHostKeyAlgorithms=+ssh-rsa',
                 '-oStrictHostKeyChecking=no',
                 '-oUserKnownHostsFile=/dev/null',
-                f'{self.config.ssh_username}',
+                self.config.ssh_username,
                 '-p', str(self.config.ssh_port),
                 '-L', f'{self.config.local_adb_port}:adb-proxy:{self.config.adb_proxy_port}',
                 '-Nf'  # Background mode
             ]
             
-            # Add SSH key via stdin
-            process = subprocess.Popen(
+            self.log(f"SSH Command: {' '.join(ssh_cmd)}")
+            
+            # Execute SSH tunnel
+            result = subprocess.run(
                 ssh_cmd,
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
+                capture_output=True,
+                text=True,
+                timeout=10
             )
             
-            # Wait a bit for tunnel to establish
-            time.sleep(2)
+            if result.returncode != 0:
+                self.log(f"SSH tunnel error: {result.stderr}", 'error')
+                os.unlink(key_file_path)  # Clean up key file
+                return False
             
-            self.log("SSH tunnel established")
+            # Wait for tunnel to establish
+            time.sleep(3)
+            
+            # Store key file path for cleanup
+            self.ssh_key_file = key_file_path
+            
+            self.log("SSH tunnel established successfully")
             return True
             
         except Exception as e:
@@ -385,6 +406,10 @@ class VMOSCloudBot:
             
             # Also kill any lingering SSH processes
             subprocess.run(['pkill', '-f', f'{self.config.local_adb_port}:adb-proxy'])
+            
+            # Clean up SSH key file
+            if self.ssh_key_file and os.path.exists(self.ssh_key_file):
+                os.unlink(self.ssh_key_file)
             
             self.log("Cleanup complete")
             

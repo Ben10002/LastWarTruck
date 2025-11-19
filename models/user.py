@@ -17,11 +17,9 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_login = db.Column(db.DateTime)
     
-    # Relationships
+   # Relationships
     subscription = db.relationship('Subscription', backref='user', uselist=False, cascade='all, delete-orphan')
-    bot_config = db.relationship('BotConfig', backref='user', uselist=False, cascade='all, delete-orphan')
-    bot_timers = db.relationship('BotTimer', backref='user', cascade='all, delete-orphan')
-    bot_logs = db.relationship('BotLog', backref='user', cascade='all, delete-orphan')
+    # bot_config, bot_timers, bot_logs are defined via backref in their respective models
     
     def set_password(self, password):
         """Set password hash"""

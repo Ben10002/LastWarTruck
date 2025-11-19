@@ -110,6 +110,18 @@ def start_bot():
     db.session.add(new_timer)
     db.session.commit()
     
+    # Start bot worker in background thread
+    import threading
+    from bot_worker import VMOSCloudBot
+    
+    def run_bot():
+        bot = VMOSCloudBot(user.id)
+        if bot.start():
+            bot.run()
+    
+    bot_thread = threading.Thread(target=run_bot, daemon=True)
+    bot_thread.start()
+    
     BotLog.add_log(user.id, 'info', 'Bot started')
     
     return redirect(url_for('dashboard.index', success='bot_started'))

@@ -9,3 +9,4 @@ from .user import User
 from .license import License
 from .subscription import Subscription
 from .bot_config import BotConfig, BotTimer, BotLog
+from .bot_schedule import BotSchedule

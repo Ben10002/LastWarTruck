@@ -6,6 +6,8 @@ from models.license import License
 from models.subscription import Subscription
 from models.bot_config import BotConfig, BotLog
 from datetime import datetime
+from models.bot_config import BotConfig, BotLog
+from models.bot_schedule import BotSchedule
 
 bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
 
@@ -209,3 +211,127 @@ def licenses():
                          user=user,
                          subscription=subscription,
                          licenses=licenses)
+
+
+@bp.route('/schedule')
+@login_required
+def schedule():
+    """Bot scheduler page"""
+    user_id = request.cookies.get('user_id') or session.get('user_id')
+    user = User.query.get_or_404(int(user_id))
+    
+    # Get user's schedules
+    schedules = BotSchedule.query.filter_by(user_id=user.id).order_by(BotSchedule.day_of_week, BotSchedule.start_time).all()
+    
+    # Get bot config for defaults
+    bot_config = BotConfig.query.filter_by(user_id=user.id).first()
+    if not bot_config:
+        bot_config = BotConfig(user_id=user.id)
+        db.session.add(bot_config)
+        db.session.commit()
+    
+    return render_template('user/schedule.html', 
+                         user=user,
+                         schedules=schedules,
+                         bot_config=bot_config)
+
+
+@bp.route('/schedule/add', methods=['POST'])
+@login_required
+def add_schedule():
+    """Add a new schedule"""
+    user_id = request.cookies.get('user_id') or session.get('user_id')
+    user = User.query.get_or_404(int(user_id))
+    
+    # Get form data
+    name = request.form.get('name', '').strip()
+    day_of_week = request.form.get('day_of_week')
+    start_time_str = request.form.get('start_time')
+    end_time_str = request.form.get('end_time')
+    
+    # Validate
+    if not name or not start_time_str or not end_time_str:
+        return redirect(url_for('dashboard.schedule', error='missing_fields'))
+    
+    # Parse times
+    from datetime import time as dt_time
+    start_time = dt_time.fromisoformat(start_time_str)
+    end_time = dt_time.fromisoformat(end_time_str)
+    
+    # Check if end time is after start time
+    if end_time <= start_time:
+        return redirect(url_for('dashboard.schedule', error='invalid_time'))
+    
+    # Parse day_of_week (empty = every day)
+    day_of_week_int = int(day_of_week) if day_of_week else None
+    
+    # Create new schedule
+    new_schedule = BotSchedule(
+        user_id=user.id,
+        name=name,
+        day_of_week=day_of_week_int,
+        start_time=start_time,
+        end_time=end_time,
+        share_alliance=request.form.get('share_alliance') == 'on',
+        share_world=request.form.get('share_world') == 'on',
+        truck_strength=int(request.form.get('truck_strength', 30)),
+        server_restriction_enabled=request.form.get('server_restriction_enabled') == 'on',
+        server_restriction_value=int(request.form.get('server_restriction_value')) if request.form.get('server_restriction_value') else None
+    )
+    
+    # Check for overlaps
+    existing_schedules = BotSchedule.query.filter_by(user_id=user.id, is_active=True).all()
+    for schedule in existing_schedules:
+        if new_schedule.overlaps_with(schedule):
+            return redirect(url_for('dashboard.schedule', error='overlap', conflict_name=schedule.name))
+    
+    db.session.add(new_schedule)
+    db.session.commit()
+    
+    BotLog.add_log(user.id, 'info', f'Schedule "{name}" created')
+    
+    return redirect(url_for('dashboard.schedule', success='added'))
+
+
+@bp.route('/schedule/delete/<int:schedule_id>', methods=['POST'])
+@login_required
+def delete_schedule(schedule_id):
+    """Delete a schedule"""
+    user_id = request.cookies.get('user_id') or session.get('user_id')
+    user = User.query.get_or_404(int(user_id))
+    
+    schedule = BotSchedule.query.get_or_404(schedule_id)
+    
+    # Check ownership
+    if schedule.user_id != user.id:
+        abort(403)
+    
+    schedule_name = schedule.name
+    db.session.delete(schedule)
+    db.session.commit()
+    
+    BotLog.add_log(user.id, 'info', f'Schedule "{schedule_name}" deleted')
+    
+    return redirect(url_for('dashboard.schedule', success='deleted'))
+
+
+@bp.route('/schedule/toggle/<int:schedule_id>', methods=['POST'])
+@login_required
+def toggle_schedule(schedule_id):
+    """Toggle schedule active/inactive"""
+    user_id = request.cookies.get('user_id') or session.get('user_id')
+    user = User.query.get_or_404(int(user_id))
+    
+    schedule = BotSchedule.query.get_or_404(schedule_id)
+    
+    # Check ownership
+    if schedule.user_id != user.id:
+        abort(403)
+    
+    schedule.is_active = not schedule.is_active
+    db.session.commit()
+    
+    status = 'activated' if schedule.is_active else 'deactivated'
+    BotLog.add_log(user.id, 'info', f'Schedule "{schedule.name}" {status}')
+    
+    return redirect(url_for('dashboard.schedule', success='toggled'))

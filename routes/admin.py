@@ -22,4 +22,3 @@ def admin_required(f):
 def dashboard():
     """Admin dashboard"""
     return render_template('admin/dashboard.html')
-```

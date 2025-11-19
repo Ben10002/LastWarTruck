@@ -3,27 +3,32 @@ from . import db
 
 
 class BotConfig(db.Model):
-    """BotConfig Model - Bot & VMOSCloud Einstellungen pro User"""
+    """BotConfig Model - Bot & VMOSCloud settings per user"""
     
     __tablename__ = 'bot_configs'
     
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
     
-    # VMOSCloud SSH Verbindung
+    # VMOSCloud SSH Connection (Admin-managed)
     ssh_host = db.Column(db.String(255), nullable=True)
     ssh_port = db.Column(db.Integer, default=22)
     ssh_user = db.Column(db.String(100), nullable=True)
-    ssh_pass = db.Column(db.String(255), nullable=True)  # Encrypted speichern in Production!
+    ssh_pass = db.Column(db.String(255), nullable=True)  # Encrypt in production!
     adb_port = db.Column(db.Integer, default=5555)
     
-    # Screen Settings
+    # Screen Settings (Admin-managed)
     screen_width = db.Column(db.Integer, default=720)
     screen_height = db.Column(db.Integer, default=1280)
     
-    # Bot Settings
-    share_mode = db.Column(db.Boolean, default=False)
-    language = db.Column(db.String(2), default='de')  # 'de' oder 'en'
+    # Bot Settings (User-configurable)
+    interval_minutes = db.Column(db.Integer, default=60)  # Run every X minutes
+    share_alliance = db.Column(db.Boolean, default=False)  # Share in Alliance (A4O)
+    share_world = db.Column(db.Boolean, default=False)  # Share in World Chat
+    min_strength = db.Column(db.Integer, default=1000000)  # Minimum truck strength
+    max_strength = db.Column(db.Integer, default=10000000)  # Maximum truck strength
+    server_restriction = db.Column(db.String(50), default='none')  # 'none', 'same_server', 'cross_server'
+    language = db.Column(db.String(2), default='en')  # 'de' or 'en'
     
     # Bot Status
     is_running = db.Column(db.Boolean, default=False)
@@ -35,7 +40,7 @@ class BotConfig(db.Model):
     
     @property
     def is_configured(self):
-        """Prüfe ob Bot vollständig konfiguriert ist"""
+        """Check if bot is fully configured (by admin)"""
         return all([
             self.ssh_host,
             self.ssh_user,
@@ -43,7 +48,7 @@ class BotConfig(db.Model):
         ])
     
     def to_dict(self):
-        """Konvertiere zu Dictionary für Bot"""
+        """Convert to dictionary for bot"""
         return {
             'ssh_host': self.ssh_host,
             'ssh_port': self.ssh_port,
@@ -52,7 +57,12 @@ class BotConfig(db.Model):
             'adb_port': self.adb_port,
             'screen_width': self.screen_width,
             'screen_height': self.screen_height,
-            'share_mode': self.share_mode,
+            'interval_minutes': self.interval_minutes,
+            'share_alliance': self.share_alliance,
+            'share_world': self.share_world,
+            'min_strength': self.min_strength,
+            'max_strength': self.max_strength,
+            'server_restriction': self.server_restriction,
             'language': self.language
         }
     
@@ -61,31 +71,31 @@ class BotConfig(db.Model):
 
 
 class BotTimer(db.Model):
-    """BotTimer Model - Persistente Timer pro User"""
+    """BotTimer Model - Persistent timers per user"""
     
     __tablename__ = 'bot_timers'
     
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    timer_name = db.Column(db.String(50), nullable=False)  # z.B. 'lkw_1', 'lkw_2', etc.
+    timer_name = db.Column(db.String(50), nullable=False)  # e.g. 'lkw_1', 'lkw_2', etc.
     next_run = db.Column(db.DateTime, nullable=False)
     interval_seconds = db.Column(db.Integer, nullable=False)
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Unique constraint: Ein User kann nur einen Timer mit gleichem Namen haben
+    # Unique constraint: A user can only have one timer with the same name
     __table_args__ = (
         db.UniqueConstraint('user_id', 'timer_name', name='unique_user_timer'),
     )
     
     @property
     def is_ready(self):
-        """Prüfe ob Timer bereit zum Ausführen ist"""
+        """Check if timer is ready to execute"""
         return datetime.utcnow() >= self.next_run and self.is_active
     
     def reset(self):
-        """Setze Timer zurück (nächster Run = jetzt + interval)"""
+        """Reset timer (next run = now + interval)"""
         from datetime import timedelta
         self.next_run = datetime.utcnow() + timedelta(seconds=self.interval_seconds)
         self.updated_at = datetime.utcnow()
@@ -96,7 +106,7 @@ class BotTimer(db.Model):
 
 
 class BotLog(db.Model):
-    """BotLog Model - Log-Einträge pro User"""
+    """BotLog Model - Log entries per user"""
     
     __tablename__ = 'bot_logs'
     
@@ -111,7 +121,7 @@ class BotLog(db.Model):
     
     @staticmethod
     def add_log(user_id, log_type, message):
-        """Füge neuen Log-Eintrag hinzu"""
+        """Add new log entry"""
         log = BotLog(
             user_id=user_id,
             log_type=log_type,
@@ -122,7 +132,7 @@ class BotLog(db.Model):
     
     @staticmethod
     def get_recent_logs(user_id, limit=50):
-        """Hole die neuesten Logs für einen User"""
+        """Get the most recent logs for a user"""
         return BotLog.query.filter_by(user_id=user_id)\
                           .order_by(BotLog.created_at.desc())\
                           .limit(limit)\
@@ -130,7 +140,7 @@ class BotLog(db.Model):
     
     @staticmethod
     def clear_old_logs(days=7):
-        """Lösche Logs die älter als X Tage sind"""
+        """Delete logs older than X days"""
         from datetime import timedelta
         cutoff = datetime.utcnow() - timedelta(days=days)
         BotLog.query.filter(BotLog.created_at < cutoff).delete()

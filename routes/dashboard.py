@@ -152,14 +152,14 @@ def configure_bot():
         db.session.commit()
     
     if request.method == 'POST':
-        # Update configuration
-        bot_config.ssh_host = request.form.get('ssh_host')
-        bot_config.ssh_port = int(request.form.get('ssh_port', 22))
-        bot_config.ssh_user = request.form.get('ssh_user')
-        bot_config.ssh_pass = request.form.get('ssh_pass')
-        bot_config.adb_port = int(request.form.get('adb_port', 5555))
+        # Update user-configurable settings only
+        bot_config.interval_minutes = int(request.form.get('interval_minutes', 60))
+        bot_config.share_alliance = request.form.get('share_alliance') == 'on'
+        bot_config.share_world = request.form.get('share_world') == 'on'
+        bot_config.min_strength = int(request.form.get('min_strength', 1000000))
+        bot_config.max_strength = int(request.form.get('max_strength', 10000000))
+        bot_config.server_restriction = request.form.get('server_restriction', 'none')
         bot_config.language = request.form.get('language', 'en')
-        bot_config.share_mode = request.form.get('share_mode') == 'on'
         
         db.session.commit()
         

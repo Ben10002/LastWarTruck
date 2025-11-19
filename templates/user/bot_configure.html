@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}Bot Configuration - LKW Bot{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-md border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <div class="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center mr-3">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                        </div>
+                        <span class="text-xl font-bold text-slate-900">LKW Bot</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="{{ url_for('dashboard.index') }}" class="text-sm text-slate-600 hover:text-slate-900 font-medium">
+                        ← Back to Dashboard
+                    </a>
+                    <span class="text-sm text-slate-600">{{ user.email }}</span>
+                    <a href="{{ url_for('auth.logout') }}" class="text-sm text-slate-600 hover:text-slate-900 font-medium">
+                        Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <h1 class="text-3xl font-bold text-slate-900 mb-2">Bot Configuration</h1>
+        <p class="text-slate-600 mb-8">Configure your bot's behavior and sharing settings</p>
+        
+        <!-- Configuration Form -->
+        <div class="bg-white rounded-xl shadow-lg p-8">
+            <form method="POST" class="space-y-8">
+                
+                <!-- Timing Settings -->
+                <div class="border-b border-slate-200 pb-6">
+                    <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center">
+                        <svg class="w-6 h-6 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Timing Settings
+                    </h3>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                            Run Interval (minutes)
+                        </label>
+                        <input type="number" 
+                               name="interval_minutes" 
+                               value="{{ bot_config.interval_minutes }}"
+                               min="5"
+                               max="1440"
+                               required
+                               class="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all">
+                        <p class="text-xs text-slate-500 mt-2">How often the bot should run (5-1440 minutes)</p>
+                    </div>
+                </div>
+                
+                <!-- Sharing Settings -->
+                <div class="border-b border-slate-200 pb-6">
+                    <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center">
+                        <svg class="w-6 h-6 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                        </svg>
+                        Sharing Settings
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                            <div>
+                                <p class="font-semibold text-slate-900">Share in Alliance (A4O)</p>
+                                <p class="text-sm text-slate-600">Share trucks in alliance chat</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" 
+                                       name="share_alliance" 
+                                       {% if bot_config.share_alliance %}checked{% endif %}
+                                       class="sr-only peer">
+                                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+                            </label>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                            <div>
+                                <p class="font-semibold text-slate-900">Share in World Chat</p>
+                                <p class="text-sm text-slate-600">Share trucks in world chat</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" 
+                                       name="share_world" 
+                                       {% if bot_config.share_world %}checked{% endif %}
+                                       class="sr-only peer">
+                                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Strength Settings -->
+                <div class="border-b border-slate-200 pb-6">
+                    <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center">
+                        <svg class="w-6 h-6 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                        Truck Strength Range
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                Minimum Strength
+                            </label>
+                            <input type="number" 
+                                   name="min_strength" 
+                                   value="{{ bot_config.min_strength }}"
+                                   min="0"
+                                   step="100000"
+                                   required
+                                   class="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all">
+                            <p class="text-xs text-slate-500 mt-1">Minimum truck strength to share</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                Maximum Strength
+                            </label>
+                            <input type="number" 
+                                   name="max_strength" 
+                                   value="{{ bot_config.max_strength }}"
+                                   min="0"
+                                   step="100000"
+                                   required
+                                   class="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all">
+                            <p class="text-xs text-slate-500 mt-1">Maximum truck strength to share</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Server Restriction -->
+                <div class="border-b border-slate-200 pb-6">
+                    <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center">
+                        <svg class="w-6 h-6 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/>
+                        </svg>
+                        Server Restriction
+                    </h3>
+                    
+                    <select name="server_restriction" 
+                            class="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all">
+                        <option value="none" {% if bot_config.server_restriction == 'none' %}selected{% endif %}>
+                            No Restriction (All Servers)
+                        </option>
+                        <option value="same_server" {% if bot_config.server_restriction == 'same_server' %}selected{% endif %}>
+                            Same Server Only
+                        </option>
+                        <option value="cross_server" {% if bot_config.server_restriction == 'cross_server' %}selected{% endif %}>
+                            Cross-Server Only
+                        </option>
+                    </select>
+                    <p class="text-xs text-slate-500 mt-2">Restrict which servers can receive your trucks</p>
+                </div>
+                
+                <!-- Language -->
+                <div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center">
+                        <svg class="w-6 h-6 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/>
+                        </svg>
+                        Language
+                    </h3>
+                    
+                    <div class="flex space-x-4">
+                        <label class="flex-1 cursor-pointer">
+                            <input type="radio" 
+                                   name="language" 
+                                   value="en" 
+                                   {% if bot_config.language == 'en' %}checked{% endif %}
+                                   class="sr-only peer">
+                            <div class="p-4 text-center border-2 border-slate-200 rounded-lg peer-checked:border-primary-500 peer-checked:bg-primary-50 transition-all">
+                                <p class="font-semibold text-slate-900">🇬🇧 English</p>
+                            </div>
+                        </label>
+                        
+                        <label class="flex-1 cursor-pointer">
+                            <input type="radio" 
+                                   name="language" 
+                                   value="de" 
+                                   {% if bot_config.language == 'de' %}checked{% endif %}
+                                   class="sr-only peer">
+                            <div class="p-4 text-center border-2 border-slate-200 rounded-lg peer-checked:border-primary-500 peer-checked:bg-primary-50 transition-all">
+                                <p class="font-semibold text-slate-900">🇩🇪 Deutsch</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Submit Buttons -->
+                <div class="flex space-x-4 pt-6">
+                    <button type="submit" 
+                            class="flex-1 bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all">
+                        Save Configuration
+                    </button>
+                    
+                    <a href="{{ url_for('dashboard.index') }}" 
+                       class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-900 font-semibold py-3 px-6 rounded-lg text-center transition-all">
+                        Cancel
+                    </a>
+                </div>
+                
+            </form>
+        </div>
+        
+    </div>
+</div>
+{% endblock %}

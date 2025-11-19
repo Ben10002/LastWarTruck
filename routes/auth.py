@@ -40,12 +40,16 @@ def login():
                 return redirect(url_for('auth.login'))
             
             # Manual session login
+            print(f"DEBUG LOGIN: Setting session for user {user.id}")
             session['user_id'] = user.id
             session['is_admin'] = user.is_admin
             session.permanent = True
+            print(f"DEBUG LOGIN: Session after set = {dict(session)}")
             
             user.update_last_login()
             db.session.commit()
+            
+            print(f"DEBUG LOGIN: About to redirect to admin dashboard")
             
             # Redirect based on role
             if user.is_admin:

@@ -50,25 +50,20 @@ def redeem_license():
     license_key = request.form.get('license_key', '').strip().upper()
     
     if not license_key:
-        flash('Please enter a license key.', 'error')
-        return redirect(url_for('dashboard.index'))
+        return redirect(url_for('dashboard.index', error='empty'))
     
     # Find license
     license = License.query.filter_by(key=license_key).first()
     
     if not license:
-        flash('Invalid license key. Please check and try again.', 'error')
-        return redirect(url_for('dashboard.index'))
+        return redirect(url_for('dashboard.index', error='invalid'))
     
     if license.is_redeemed:
-        flash('This license key has already been redeemed.', 'error')
-        return redirect(url_for('dashboard.index'))
+        return redirect(url_for('dashboard.index', error='redeemed'))
     
     # Redeem license
     if license.redeem(user):
         db.session.commit()
-        flash(f'License activated successfully! Your subscription has been extended by {license.duration_days} days.', 'success')
+        return redirect(url_for('dashboard.index', success='true', days=license.duration_days))
     else:
-        flash('Failed to redeem license. Please try again.', 'error')
-    
-    return redirect(url_for('dashboard.index'))
+        return redirect(url_for('dashboard.index', error='failed'))

@@ -105,17 +105,25 @@ def start_bot():
     if bot_config.is_running:
         return redirect(url_for('dashboard.index', error='already_running'))
     
+    # Start bot by creating a new timer
+    new_timer = BotTimer(user_id=user.id)
+    db.session.add(new_timer)
+    db.session.commit()
+    
     # Start bot worker in background thread
     import threading
     from bot_worker import VMOSCloudBot
-    from flask import current_app
+    from app import app  # Import the app instance
     
     def run_bot():
         # Push app context for this thread
-        with current_app.app_context():
-            bot = VMOSCloudBot(user.id)
-            if bot.start():
-                bot.run()
+        with app.app_context():
+            try:
+                bot = VMOSCloudBot(user.id)
+                if bot.start():
+                    bot.run()
+            except Exception as e:
+                print(f"Bot thread error: {e}")
     
     bot_thread = threading.Thread(target=run_bot, daemon=True)
     bot_thread.start()
@@ -249,6 +257,7 @@ def schedule():
                          schedules=schedules,
                          bot_config=bot_config,
                          today=today)
+
 
 @bp.route('/schedule/add', methods=['POST'])
 @login_required

@@ -114,9 +114,12 @@
         {% endif %}
     {% endwith %}
     
-    <!-- Main Content -->
+   <!-- Main Content -->
 <div class="container mx-auto px-4 py-8">
-    {% block content %}{% endblock %}
+    {% block content %}
+    {% block body %}
+    {% endblock %}
+    {% endblock %}
 </div>
 </body>
 </html>

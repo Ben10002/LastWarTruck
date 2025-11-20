@@ -211,10 +211,10 @@
 </div>
 
 <!-- JavaScript for Live Timer -->
-{% if bot_config.is_running %}
+{% if bot_config.is_running and bot_timers %}
 <script>
-    // Get bot start time from server
-    const botStartTime = {{ bot_timers[0].started_at.timestamp() * 1000 if bot_timers else 'Date.now()' }};
+    // Get bot start time from server (convert Python datetime to JavaScript timestamp)
+    const botStartTime = new Date("{{ bot_timers[0].started_at.isoformat() }}").getTime();
     
     function updateTimer() {
         const now = Date.now();

@@ -1,10 +1,5 @@
 {% extends "base.html" %}
 
-<!-- DEBUG -->
-{% if bot_timers %}
-<!-- Bot timers exist: {{ bot_timers|length }} -->
-{% endif %}
-
 {% block title %}Dashboard - LKW Bot{% endblock %}
 
 {% block content %}
@@ -216,8 +211,7 @@
 </div>
 
 <!-- JavaScript for Live Timer -->
-{% if bot_config.is_running %}
-{% if bot_start_timestamp %}
+{% if bot_config.is_running and bot_start_timestamp %}
 <script>
     console.log("Bot start timestamp:", {{ bot_start_timestamp }});
     
@@ -244,10 +238,11 @@
     setInterval(updateTimer, 1000);
     updateTimer(); // Initial call
 </script>
-{% else %}
+{% elif bot_config.is_running %}
 <script>
-    console.log("No bot_start_timestamp available");
+    // Fallback: Bot is running but no timestamp available
+    document.getElementById('runningTimer').textContent = "N/A";
+    console.log("Bot running but no timestamp");
 </script>
-{% endif %}
 {% endif %}
 {% endblock %}

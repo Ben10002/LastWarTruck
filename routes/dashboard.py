@@ -50,13 +50,19 @@ def index():
     # Get active bot timers
     bot_timers = BotTimer.query.filter_by(user_id=user.id, stopped_at=None).order_by(BotTimer.started_at.desc()).all()
     
+    # Get bot start timestamp for JavaScript (in milliseconds)
+    bot_start_timestamp = None
+    if bot_timers:
+        bot_start_timestamp = int(bot_timers[0].started_at.timestamp() * 1000)
+    
     return render_template('user/dashboard.html', 
                          user=user,
                          subscription=subscription,
                          licenses=licenses,
                          bot_config=bot_config,
                          bot_logs=bot_logs,
-                         bot_timers=bot_timers)
+                         bot_timers=bot_timers,
+                         bot_start_timestamp=bot_start_timestamp)
 
 
 @bp.route('/redeem', methods=['POST'])

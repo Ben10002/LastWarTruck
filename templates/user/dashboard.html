@@ -1,5 +1,10 @@
 {% extends "base.html" %}
 
+<!-- DEBUG -->
+{% if bot_timers %}
+<!-- Bot timers exist: {{ bot_timers|length }} -->
+{% endif %}
+
 {% block title %}Dashboard - LKW Bot{% endblock %}
 
 {% block content %}
@@ -211,10 +216,13 @@
 </div>
 
 <!-- JavaScript for Live Timer -->
-{% if bot_config.is_running and bot_timers %}
+{% if bot_config.is_running %}
+{% if bot_start_timestamp %}
 <script>
-    // Get bot start time from server (convert Python datetime to JavaScript timestamp)
-    const botStartTime = new Date("{{ bot_timers[0].started_at.isoformat() }}").getTime();
+    console.log("Bot start timestamp:", {{ bot_start_timestamp }});
+    
+    // Get bot start time from server
+    const botStartTime = {{ bot_start_timestamp }};
     
     function updateTimer() {
         const now = Date.now();
@@ -236,5 +244,9 @@
     setInterval(updateTimer, 1000);
     updateTimer(); // Initial call
 </script>
+{% else %}
+<script>
+    console.log("No bot_start_timestamp available");
+</script>
 {% endif %}
-{% endblock %}
+{% endif %}

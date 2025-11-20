@@ -3,6 +3,10 @@ from flask import Flask, render_template, redirect, url_for
 from flask_session import Session
 from config import config
 from models import db, login_manager
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
+from datetime import datetime, time as dt_time
+import atexit
 
 
 def create_app(config_name=None):
@@ -68,6 +72,26 @@ def create_app(config_name=None):
             db.session.add(admin)
             db.session.commit()
             print(f"Admin user created: {app.config['ADMIN_EMAIL']} / admin123")
+    
+    # Initialize APScheduler
+    scheduler = BackgroundScheduler()
+    
+    # Add job to check schedules every minute
+    from scheduler_tasks import check_schedules
+    scheduler.add_job(
+        func=check_schedules,
+        trigger=CronTrigger(second=0),  # Run at the start of every minute
+        id='check_schedules',
+        name='Check bot schedules',
+        replace_existing=True
+    )
+    
+    # Start scheduler
+    scheduler.start()
+    print("[SCHEDULER] Background scheduler started")
+    
+    # Shutdown scheduler on app exit
+    atexit.register(lambda: scheduler.shutdown())
     
     return app
 

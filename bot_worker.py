@@ -53,7 +53,7 @@ class VMOSCloudBot:
         
         # OCR regions (L, top, R, bottom) for reading truck info
         self.OCR_REGIONS = {
-            'strength': (200, 950, 320, 990),  # Moved up and left
+            'strength': (215, 950, 335, 990),  # +15 pixels from (200, 950, 320, 990)
             'server': (160, 860, 240, 910),  # Server number box
         }
         

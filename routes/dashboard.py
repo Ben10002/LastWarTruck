@@ -53,8 +53,9 @@ def index():
     # Get bot start timestamp for JavaScript (in milliseconds)
     bot_start_timestamp = None
     if bot_timers:
-        from datetime import timezone
-        bot_start_timestamp = int(bot_timers[0].started_at.replace(tzinfo=timezone.utc).timestamp() * 1000)
+        # Use strftime to convert to Unix timestamp
+        import time as time_module
+        bot_start_timestamp = int(time_module.mktime(bot_timers[0].started_at.timetuple()) * 1000)
     
     return render_template('user/dashboard.html', 
                          user=user,

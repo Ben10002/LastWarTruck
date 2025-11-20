@@ -248,4 +248,13 @@
         
     </div>
 </div>
+<!-- Auto-refresh when bot is running -->
+{% if bot_config.is_running %}
+<script>
+    // Reload page every 10 seconds to update status
+    setTimeout(function() {
+        location.reload();
+    }, 10000);
+</script>
+{% endif %}
 {% endblock %}

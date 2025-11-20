@@ -54,7 +54,7 @@ class VMOSCloudBot:
         # OCR regions (L, top, R, bottom) for reading truck info
         self.OCR_REGIONS = {
             'strength': (215, 950, 335, 990),  # Strength box
-            'server': (160, 865, 235, 910),  # Smaller: top +5 (860→865), right -5 (240→235)
+            'server': (160, 875, 225, 910),  # Smaller: top +10 more (865→875), right -10 more (235→225)
         }
         
         # Remembered trucks (dict with timestamp)
@@ -372,11 +372,21 @@ class VMOSCloudBot:
             self.log(f"Truck too strong ({strength}M > {self.config.truck_strength}M), skipping", 'info')
             return False
         
+        # Log successful strength check
+        self.log(f"Strength OK ({strength}M <= {self.config.truck_strength}M)", 'info')
+        
         # Check server restriction
-        if self.config.server_restriction_enabled and 'server' in truck_info:
-            if truck_info['server'] != self.config.server_restriction_value:
-                self.log(f"Wrong server (#{truck_info['server']}), skipping", 'info')
+        if self.config.server_restriction_enabled:
+            if 'server' not in truck_info:
+                self.log("Cannot read server number, skipping", 'warning')
                 return False
+            
+            if truck_info['server'] != self.config.server_restriction_value:
+                self.log(f"Wrong server (#{truck_info['server']} != #{self.config.server_restriction_value}), skipping", 'info')
+                return False
+            
+            # Log successful server check
+            self.log(f"Server OK (#{truck_info['server']})", 'info')
         
         return True
     

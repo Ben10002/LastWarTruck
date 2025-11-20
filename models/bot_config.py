@@ -152,7 +152,7 @@ class BotLog(db.Model):
         """Helper method to add log entry"""
         log = BotLog(user_id=user_id, level=level, message=message)
         db.session.add(log)
-        db.session.commit()
+        db.session.commit()  # Force commit immediately for live updates
         return log
     
     @staticmethod

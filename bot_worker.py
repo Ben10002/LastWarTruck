@@ -321,6 +321,10 @@ class VMOSCloudBot:
             server_region = self.OCR_REGIONS['server']
             server_img = screenshot[server_region[1]:server_region[3], server_region[0]:server_region[2]]
             
+            # DEBUG: Save cropped region
+            cv2.imwrite(f'/tmp/server_crop_{self.user_id}.png', server_img)
+            print(f"[DEBUG] Saved server crop to /tmp/server_crop_{self.user_id}.png")
+            
             # Preprocess image for better OCR
             gray = cv2.cvtColor(server_img, cv2.COLOR_BGR2GRAY)
             # Increase contrast

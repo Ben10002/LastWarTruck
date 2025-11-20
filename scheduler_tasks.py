@@ -1,8 +1,8 @@
 """
 Background scheduler tasks for bot automation
 """
-from datetime import datetime, time as dt_time
-import pytz  # Neu hinzufügen
+from datetime import datetime, time as dt_time, timedelta
+import pytz
 from models import db
 from models.bot_config import BotConfig, BotTimer
 from models.bot_schedule import BotSchedule
@@ -41,7 +41,7 @@ def check_schedules():
             if not bot_config:
                 continue
             
-            # Check if schedule matches current time (within 1 minute window)
+            # Check if schedule matches current time (within 5 seconds window)
             should_run = False
             
             # If specific date is set, check if it matches
@@ -49,15 +49,13 @@ def check_schedules():
                 if schedule.scheduled_date != current_date:
                     continue  # Wrong date
             
-            # Check if we're within the start time window (±1 minute)
-            start_hour = schedule.start_time.hour
-            start_minute = schedule.start_time.minute
-            current_hour = current_time.hour
-            current_minute = current_time.minute
+            # Create datetime objects for comparison
+            schedule_start = datetime.combine(current_date, schedule.start_time)
+            schedule_end = datetime.combine(current_date, schedule.end_time)
+            current_datetime = datetime.combine(current_date, current_time)
             
-            # Check for start time
-            if (start_hour == current_hour and 
-                abs(start_minute - current_minute) <= 1 and
+            # Check for start time (within 5 seconds window)
+            if (abs((current_datetime - schedule_start).total_seconds()) <= 5 and
                 not bot_config.is_running):
                 
                 print(f"[SCHEDULER] Starting bot for user {user.email} (schedule: {schedule.name})")
@@ -73,12 +71,8 @@ def check_schedules():
                 # Start bot
                 start_bot_for_user(user.id)
             
-            # Check for end time
-            end_hour = schedule.end_time.hour
-            end_minute = schedule.end_time.minute
-            
-            if (end_hour == current_hour and 
-                abs(end_minute - current_minute) <= 1 and
+            # Check for end time (within 5 seconds window)
+            if (abs((current_datetime - schedule_end).total_seconds()) <= 5 and
                 bot_config.is_running):
                 
                 print(f"[SCHEDULER] Stopping bot for user {user.email} (schedule: {schedule.name})")

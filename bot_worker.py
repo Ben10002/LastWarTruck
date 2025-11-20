@@ -64,48 +64,59 @@ class VMOSCloudBot:
     
     def log(self, message, level='info'):
         """Add log entry - simplified for users"""
-        # Only log to console in debug mode
+        # Console output
         print(f"[BOT {self.user_id}] {message}")
         
         # Simplified messages for user
         user_messages = {
-            # Connection
             'Setting up SSH tunnel...': 'Connecting...',
             'SSH tunnel established successfully': 'Connected',
             'Connecting ADB...': 'Connecting to device...',
             'ADB connected successfully': 'Device connected',
             'Bot started successfully!': 'Bot started',
             'Starting main bot loop...': 'Searching for trucks...',
-            
-            # Cleanup
-            'Cleaning up old tunnels...': None,  # Don't show
-            'Waiting for tunnel to stabilize...': None,  # Don't show
+            'Cleaning up old tunnels...': None,
+            'Waiting for tunnel to stabilize...': None,
             'Bot stop signal received, exiting loop': 'Stopping bot...',
-            'Cleaning up...': None,  # Don't show
+            'Cleaning up...': None,
             'Cleanup complete': 'Bot stopped',
-            
-            # Debug logs - don't show to user
             'Screenshot saved to': None,
             'Template:': None,
             'Screenshot shape:': None,
             'Match confidence:': None,
         }
         
-        # Check if we should simplify or skip this message
+        # Check if we should simplify or skip
         user_message = message
         for key, simplified in user_messages.items():
             if message.startswith(key):
                 if simplified is None:
-                    return  # Skip this log
+                    return
                 user_message = simplified
                 break
         
-        # Log to database (visible to user) - with immediate flush
+        # Create NEW session for this log (thread-safe)
         try:
+            from sqlalchemy import create_engine
+            from sqlalchemy.orm import sessionmaker
+            from config import config
+            import os
+            
+            # Get DB URL from config
+            config_name = os.environ.get('FLASK_ENV', 'development')
+            db_url = config[config_name].SQLALCHEMY_DATABASE_URI
+            
+            # Create engine and session
+            engine = create_engine(db_url)
+            Session = sessionmaker(bind=engine)
+            session = Session()
+            
+            # Add log
             log = BotLog(user_id=self.user_id, level=level, message=user_message)
-            db.session.add(log)
-            db.session.flush()  # Flush to DB immediately
-            db.session.commit()  # Commit transaction
+            session.add(log)
+            session.commit()
+            session.close()
+            
         except Exception as e:
             print(f"[ERROR] Failed to log to DB: {e}")
     

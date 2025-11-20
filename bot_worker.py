@@ -54,7 +54,7 @@ class VMOSCloudBot:
         # OCR regions (L, top, R, bottom) for reading truck info
         self.OCR_REGIONS = {
             'strength': (215, 950, 335, 990),  # Strength box
-            'server': (160, 875, 225, 910),  # Smaller: top +10 more (865→875), right -10 more (235→225)
+            'server': (160, 875, 225, 910),  # Server number box
         }
         
         # Remembered trucks (dict with timestamp)
@@ -100,8 +100,14 @@ class VMOSCloudBot:
                 user_message = simplified
                 break
         
-        # Log to database (visible to user)
-        BotLog.add_log(self.user_id, level, user_message)
+        # Log to database (visible to user) - with immediate flush
+        try:
+            log = BotLog(user_id=self.user_id, level=level, message=user_message)
+            db.session.add(log)
+            db.session.flush()  # Flush to DB immediately
+            db.session.commit()  # Commit transaction
+        except Exception as e:
+            print(f"[ERROR] Failed to log to DB: {e}")
     
     def start(self):
         """Start the bot"""
@@ -246,9 +252,9 @@ class VMOSCloudBot:
             min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
             
             # DEBUG
-            print(f"[DEBUG] Template match confidence: {max_val:.4f} (threshold: 0.50)")
+            print(f"[DEBUG] Template match confidence: {max_val:.4f} (threshold: 0.40)")
             
-            # Threshold (lowered for testing)
+            # Threshold
             threshold = 0.40
             if max_val >= threshold:
                 # Get center coordinates
@@ -325,15 +331,29 @@ class VMOSCloudBot:
             cv2.imwrite(f'/tmp/server_crop_{self.user_id}.png', server_img)
             print(f"[DEBUG] Saved server crop to /tmp/server_crop_{self.user_id}.png")
             
-            # Preprocess image for better OCR
+            # Preprocess image for better OCR - MORE AGGRESSIVE
             gray = cv2.cvtColor(server_img, cv2.COLOR_BGR2GRAY)
+            
+            # Resize to make text larger (3x)
+            gray = cv2.resize(gray, None, fx=3, fy=3, interpolation=cv2.INTER_CUBIC)
+            
             # Increase contrast
             gray = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
             
-            server_text = pytesseract.image_to_string(gray, config='--psm 7 digits')
+            # Invert if background is dark
+            if gray[0, 0] < 128:
+                gray = cv2.bitwise_not(gray)
             
-            # Extract number (e.g., "#49" -> 49)
-            server_match = re.search(r'(\d+)', server_text)
+            # Save preprocessed for debug
+            cv2.imwrite(f'/tmp/server_preprocessed_{self.user_id}.png', gray)
+            
+            # Try multiple OCR configs
+            server_text = pytesseract.image_to_string(gray, config='--psm 7 -c tessedit_char_whitelist=0123456789#')
+            
+            print(f"[DEBUG] Server OCR raw: '{server_text}'")
+            
+            # Extract LAST 1-3 digits (ignore leading garbage)
+            server_match = re.search(r'(\d{1,3})(?:\D|$)', server_text)
             if server_match:
                 info['server'] = int(server_match.group(1))
                 print(f"[DEBUG] Parsed server: #{info['server']} from '{server_text}'")

@@ -493,12 +493,25 @@ class VMOSCloudBot:
         try:
             self.log("Starting main bot loop...")
             
+            # Get start time for running timer
+            start_time = time.time()
+            
             while True:
                 # Check if bot should stop (DB query in each cycle)
                 timer = BotTimer.query.filter_by(user_id=self.user_id, stopped_at=None).first()
                 if not timer:
                     self.log("Bot stop signal received, exiting loop")
                     break
+                
+                # Check running timer (if enabled)
+                if self.config.running_timer_enabled:
+                    elapsed_minutes = (time.time() - start_time) / 60
+                    if elapsed_minutes >= self.config.running_timer_minutes:
+                        self.log(f"Running timer reached ({self.config.running_timer_minutes} min), stopping bot", 'info')
+                        # Stop the timer in DB
+                        timer.stopped_at = datetime.utcnow()
+                        db.session.commit()
+                        break
                 
                 self.run_cycle()
                 time.sleep(3)

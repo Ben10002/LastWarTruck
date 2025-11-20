@@ -47,12 +47,16 @@ def index():
     # Get recent bot logs
     bot_logs = BotLog.get_recent_logs(user.id, limit=10)
     
+    # Get active bot timers
+    bot_timers = BotTimer.query.filter_by(user_id=user.id, stopped_at=None).order_by(BotTimer.started_at.desc()).all()
+    
     return render_template('user/dashboard.html', 
                          user=user,
                          subscription=subscription,
                          licenses=licenses,
                          bot_config=bot_config,
-                         bot_logs=bot_logs)
+                         bot_logs=bot_logs,
+                         bot_timers=bot_timers)
 
 
 @bp.route('/redeem', methods=['POST'])

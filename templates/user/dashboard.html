@@ -8,213 +8,60 @@
     
     <!-- Success/Error Messages -->
     {% if request.args.get('success') %}
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        {% if request.args.get('success') == 'bot_started' %}
-            ✅ Bot started successfully!
-        {% elif request.args.get('success') == 'bot_stopped' %}
-            ⏹️ Bot stopped successfully!
-        {% elif request.args.get('success') == 'config_saved' %}
-            💾 Configuration saved successfully!
-        {% endif %}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-    {% endif %}
-    
-    {% if request.args.get('error') %}
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        {% if request.args.get('error') == 'no_subscription' %}
-            ⚠️ You need an active subscription to start the bot!
-        {% elif request.args.get('error') == 'not_configured' %}
-            ⚠️ Bot not configured yet! Please contact admin.
-        {% elif request.args.get('error') == 'already_running' %}
-            ⚠️ Bot is already running!
-        {% elif request.args.get('error') == 'not_running' %}
-            ⚠️ Bot is not running!
-        {% endif %}
+    <div class="alert alert-success alert-dismissible fade show">
+        Success!
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
     {% endif %}
     
     <div class="row">
-        <!-- Left Column -->
         <div class="col-md-6">
-            
-            <!-- Subscription Status -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">📅 Subscription Status</h5>
-                </div>
-                <div class="card-body">
-                    {% if subscription and subscription.is_active %}
-                        <div class="alert alert-success mb-0">
-                            <strong>✅ Active</strong><br>
-                            Expires: {{ subscription.expires_at.strftime('%Y-%m-%d %H:%M') }}
-                        </div>
-                    {% else %}
-                        <div class="alert alert-danger mb-0">
-                            <strong>❌ No Active Subscription</strong><br>
-                            <a href="{{ url_for('dashboard.licenses') }}" class="btn btn-primary btn-sm mt-2">Redeem License Key</a>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
             
             <!-- Bot Status -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="mb-0">🤖 Bot Status</h5>
+                    <h5>🤖 Bot Status</h5>
                 </div>
                 <div class="card-body">
                     {% if bot_config.is_running %}
-                        <div class="alert alert-success mb-3">
-                            <strong>✅ Bot is running</strong>
+                        <div class="alert alert-success">
+                            ✅ Bot is running
                         </div>
-                        
-                        <!-- Live Timer -->
-                        <div class="mb-3">
-                            <strong>⏱️ Status:</strong>
-                            <span id="runningTimer" class="badge bg-primary" style="font-size: 1.1em;">Running...</span>
-                        </div>
-                        
-                        {% if bot_config.running_timer_enabled %}
-                        <div class="mb-3">
-                            <strong>⏰ Auto-Stop:</strong>
-                            <span class="badge bg-warning">After {{ bot_config.running_timer_minutes }} minutes</span>
-                        </div>
-                        {% endif %}
-                        
                         <form method="POST" action="{{ url_for('dashboard.stop_bot') }}">
-                            <button type="submit" class="btn btn-danger btn-lg w-100">
-                                ⏹️ Stop Bot
-                            </button>
+                            <button type="submit" class="btn btn-danger w-100">⏹️ Stop Bot</button>
                         </form>
                     {% else %}
-                        <div class="alert alert-secondary mb-3">
-                            <strong>⏸️ Bot is stopped</strong>
+                        <div class="alert alert-secondary">
+                            ⏸️ Bot is stopped
                         </div>
-                        
                         <form method="POST" action="{{ url_for('dashboard.start_bot') }}">
-                            <button type="submit" class="btn btn-success btn-lg w-100" 
-                                    {% if not subscription or not subscription.is_active %}disabled{% endif %}
-                                    {% if not bot_config.is_configured %}disabled{% endif %}>
-                                ▶️ Start Bot
-                            </button>
+                            <button type="submit" class="btn btn-success w-100">▶️ Start Bot</button>
                         </form>
-                        
-                        {% if not subscription or not subscription.is_active %}
-                        <small class="text-muted d-block mt-2">⚠️ Active subscription required</small>
-                        {% elif not bot_config.is_configured %}
-                        <small class="text-muted d-block mt-2">⚠️ Bot configuration required</small>
-                        {% endif %}
                     {% endif %}
-                </div>
-            </div>
-            
-            <!-- Bot Configuration -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">⚙️ Bot Settings</h5>
-                </div>
-                <div class="card-body">
-                    <p><strong>Share Mode:</strong> 
-                        {% if bot_config.share_alliance %}
-                            <span class="badge bg-primary">Alliance</span>
-                        {% elif bot_config.share_world %}
-                            <span class="badge bg-info">World Chat</span>
-                        {% else %}
-                            <span class="badge bg-secondary">Not Set</span>
-                        {% endif %}
-                    </p>
-                    
-                    <p><strong>Truck Strength Limit:</strong> 
-                        <span class="badge bg-success">≤ {{ bot_config.truck_strength }}M</span>
-                    </p>
-                    
-                    {% if bot_config.server_restriction_enabled %}
-                    <p><strong>Server Restriction:</strong> 
-                        <span class="badge bg-warning">Server #{{ bot_config.server_restriction_value }}</span>
-                    </p>
-                    {% endif %}
-                    
-                    <a href="{{ url_for('dashboard.configure_bot') }}" class="btn btn-primary w-100">
-                        📝 Configure Bot
-                    </a>
                 </div>
             </div>
             
         </div>
         
-        <!-- Right Column -->
         <div class="col-md-6">
             
             <!-- Bot Logs -->
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">📋 Recent Logs</h5>
-                    <button class="btn btn-sm btn-outline-primary" onclick="location.reload()">
-                        🔄 Refresh
-                    </button>
-                </div>
-                <div class="card-body" style="max-height: 500px; overflow-y: auto;">
-                    {% if bot_logs %}
-                        <table class="table table-sm">
-                            <tbody>
-                                {% for log in bot_logs %}
-                                <tr>
-                                    <td style="white-space: nowrap;">
-                                        <small class="text-muted">{{ log.timestamp.strftime('%H:%M:%S') }}</small>
-                                    </td>
-                                    <td>
-                                        {% if log.level == 'error' %}
-                                            <span class="badge bg-danger">ERROR</span>
-                                        {% elif log.level == 'warning' %}
-                                            <span class="badge bg-warning">WARNING</span>
-                                        {% elif log.level == 'success' %}
-                                            <span class="badge bg-success">SUCCESS</span>
-                                        {% else %}
-                                            <span class="badge bg-info">INFO</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ log.message }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    {% else %}
-                        <p class="text-muted mb-0">No logs yet. Start the bot to see activity!</p>
-                    {% endif %}
-                </div>
-            </div>
-            
-            <!-- Quick Links -->
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">🔗 Quick Links</h5>
+                    <h5>📋 Logs</h5>
                 </div>
                 <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <a href="{{ url_for('dashboard.licenses') }}" class="btn btn-outline-primary">
-                            🎫 Manage Licenses
-                        </a>
-                        <a href="{{ url_for('dashboard.schedule') }}" class="btn btn-outline-info">
-                            📅 Bot Scheduler
-                        </a>
-                        <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-secondary">
-                            🚪 Logout
-                        </a>
-                    </div>
+                    {% if bot_logs %}
+                        {% for log in bot_logs %}
+                        <div><small>{{ log.timestamp.strftime('%H:%M:%S') }}</small> - {{ log.message }}</div>
+                        {% endfor %}
+                    {% else %}
+                        <p>No logs yet</p>
+                    {% endif %}
                 </div>
             </div>
             
         </div>
     </div>
 </div>
-
-<!-- JavaScript for Live Timer - TEMPORARILY DISABLED -->
-{% if bot_config.is_running %}
-<script>
-    // Simple static display
-    document.getElementById('runningTimer').textContent = "Running...";
-</script>
-{% endif %}
 {% endblock %}

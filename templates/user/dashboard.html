@@ -2,244 +2,250 @@
 
 {% block title %}Dashboard - LKW Bot{% endblock %}
 
-{% block content %}
-<div class="container mt-4">
-    <h2>Welcome, {{ user.email }}!</h2>
+{% block body %}
+<div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
     
-    <!-- Success/Error Messages -->
-    {% if request.args.get('success') %}
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
+    <!-- Navigation Bar -->
+    {% include 'components/user_nav.html' %}
+    
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <h1 class="text-3xl font-bold text-slate-900 mb-8">Dashboard</h1>
+        
+        <!-- Success/Error Messages -->
         {% if request.args.get('success') == 'bot_started' %}
-            ✅ Bot started successfully!
-        {% elif request.args.get('success') == 'bot_stopped' %}
-            ⏹️ Bot stopped successfully!
-        {% elif request.args.get('success') == 'config_saved' %}
-            💾 Configuration saved successfully!
+        <div class="mb-6 bg-green-500 shadow-lg rounded-lg p-4">
+            <div class="flex items-start">
+                <svg class="h-6 w-6 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <p class="ml-3 text-sm font-medium text-white">Bot started successfully!</p>
+            </div>
+        </div>
         {% endif %}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-    {% endif %}
-    
-    {% if request.args.get('error') %}
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+
+        {% if request.args.get('success') == 'bot_stopped' %}
+        <div class="mb-6 bg-green-500 shadow-lg rounded-lg p-4">
+            <div class="flex items-start">
+                <svg class="h-6 w-6 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <p class="ml-3 text-sm font-medium text-white">Bot stopped successfully!</p>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if request.args.get('success') == 'config_saved' %}
+        <div class="mb-6 bg-green-500 shadow-lg rounded-lg p-4">
+            <div class="flex items-start">
+                <svg class="h-6 w-6 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <p class="ml-3 text-sm font-medium text-white">Bot configuration saved successfully!</p>
+            </div>
+        </div>
+        {% endif %}
+
         {% if request.args.get('error') == 'no_subscription' %}
-            ⚠️ You need an active subscription to start the bot!
-        {% elif request.args.get('error') == 'not_configured' %}
-            ⚠️ Bot not configured yet! Please contact admin.
-        {% elif request.args.get('error') == 'already_running' %}
-            ⚠️ Bot is already running!
-        {% elif request.args.get('error') == 'not_running' %}
-            ⚠️ Bot is not running!
+        <div class="mb-6 bg-red-500 shadow-lg rounded-lg p-4">
+            <div class="flex items-start">
+                <svg class="h-6 w-6 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <p class="ml-3 text-sm font-medium text-white">You need an active subscription to start the bot. Please redeem a license key first.</p>
+            </div>
+        </div>
         {% endif %}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-    {% endif %}
-    
-    <div class="row">
-        <!-- Left Column -->
-        <div class="col-md-6">
+
+        {% if request.args.get('error') == 'not_configured' %}
+        <div class="mb-6 bg-red-500 shadow-lg rounded-lg p-4">
+            <div class="flex items-start">
+                <svg class="h-6 w-6 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <p class="ml-3 text-sm font-medium text-white">Please configure your bot settings before starting.</p>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if request.args.get('error') == 'already_running' %}
+        <div class="mb-6 bg-red-500 shadow-lg rounded-lg p-4">
+            <div class="flex items-start">
+                <svg class="h-6 w-6 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <p class="ml-3 text-sm font-medium text-white">Bot is already running!</p>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if request.args.get('error') == 'not_running' %}
+        <div class="mb-6 bg-red-500 shadow-lg rounded-lg p-4">
+            <div class="flex items-start">
+                <svg class="h-6 w-6 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <p class="ml-3 text-sm font-medium text-white">Bot is not running!</p>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Subscription Status Card -->
+        <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+            <h2 class="text-2xl font-bold text-slate-900 mb-6">Subscription Status</h2>
             
-            <!-- Subscription Status -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">📅 Subscription Status</h5>
-                </div>
-                <div class="card-body">
-                    {% if subscription and subscription.is_active %}
-                        <div class="alert alert-success mb-0">
-                            <strong>✅ Active</strong><br>
-                            Expires: {{ subscription.expires_at.strftime('%Y-%m-%d %H:%M') }}
-                        </div>
-                    {% else %}
-                        <div class="alert alert-danger mb-0">
-                            <strong>❌ No Active Subscription</strong><br>
-                            <a href="{{ url_for('dashboard.licenses') }}" class="btn btn-primary btn-sm mt-2">Redeem License Key</a>
-                        </div>
-                    {% endif %}
+            {% if subscription and subscription.is_active %}
+            <div class="flex items-center space-x-4 p-6 bg-green-50 rounded-lg border-2 border-green-200">
+                <svg class="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <div class="flex-1">
+                    <p class="text-lg font-bold text-green-900">Active Subscription</p>
+                    <p class="text-sm text-green-700">
+                        Expires on: <strong>{{ subscription.expires_at.strftime('%B %d, %Y') }}</strong>
+                    </p>
+                    <p class="text-xs text-green-600 mt-1">
+                        {{ subscription.days_remaining }} days remaining
+                    </p>
                 </div>
             </div>
-            
-            <!-- Bot Status -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">🤖 Bot Status</h5>
-                </div>
-                <div class="card-body">
-                    {% if bot_config.is_running %}
-                        <div class="alert alert-success mb-3">
-                            <strong>✅ Bot is running</strong>
-                        </div>
-                        
-                        <!-- Live Timer -->
-                        <div class="mb-3">
-                            <strong>⏱️ Running Time:</strong>
-                            <span id="runningTimer" class="badge bg-primary" style="font-size: 1.1em;">00:00:00</span>
-                        </div>
-                        
-                        {% if bot_config.running_timer_enabled %}
-                        <div class="mb-3">
-                            <strong>⏰ Auto-Stop:</strong>
-                            <span class="badge bg-warning">After {{ bot_config.running_timer_minutes }} minutes</span>
-                        </div>
-                        {% endif %}
-                        
-                        <form method="POST" action="{{ url_for('dashboard.stop_bot') }}">
-                            <button type="submit" class="btn btn-danger btn-lg w-100">
-                                ⏹️ Stop Bot
-                            </button>
-                        </form>
-                    {% else %}
-                        <div class="alert alert-secondary mb-3">
-                            <strong>⏸️ Bot is stopped</strong>
-                        </div>
-                        
-                        <form method="POST" action="{{ url_for('dashboard.start_bot') }}">
-                            <button type="submit" class="btn btn-success btn-lg w-100" 
-                                    {% if not subscription or not subscription.is_active %}disabled{% endif %}
-                                    {% if not bot_config.is_configured %}disabled{% endif %}>
-                                ▶️ Start Bot
-                            </button>
-                        </form>
-                        
-                        {% if not subscription or not subscription.is_active %}
-                        <small class="text-muted d-block mt-2">⚠️ Active subscription required</small>
-                        {% elif not bot_config.is_configured %}
-                        <small class="text-muted d-block mt-2">⚠️ Bot configuration required</small>
-                        {% endif %}
-                    {% endif %}
-                </div>
-            </div>
-            
-            <!-- Bot Configuration -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">⚙️ Bot Settings</h5>
-                </div>
-                <div class="card-body">
-                    <p><strong>Share Mode:</strong> 
-                        {% if bot_config.share_alliance %}
-                            <span class="badge bg-primary">Alliance</span>
-                        {% elif bot_config.share_world %}
-                            <span class="badge bg-info">World Chat</span>
-                        {% else %}
-                            <span class="badge bg-secondary">Not Set</span>
-                        {% endif %}
-                    </p>
-                    
-                    <p><strong>Truck Strength Limit:</strong> 
-                        <span class="badge bg-success">≤ {{ bot_config.truck_strength }}M</span>
-                    </p>
-                    
-                    {% if bot_config.server_restriction_enabled %}
-                    <p><strong>Server Restriction:</strong> 
-                        <span class="badge bg-warning">Server #{{ bot_config.server_restriction_value }}</span>
-                    </p>
-                    {% endif %}
-                    
-                    <a href="{{ url_for('dashboard.configure_bot') }}" class="btn btn-primary w-100">
-                        📝 Configure Bot
+            {% else %}
+            <div class="flex items-center space-x-4 p-6 bg-red-50 rounded-lg border-2 border-red-200">
+                <svg class="w-12 h-12 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <div class="flex-1">
+                    <p class="text-lg font-bold text-red-900">No Active Subscription</p>
+                    <p class="text-sm text-red-700">Please redeem a license key to activate your subscription.</p>
+                    <a href="{{ url_for('dashboard.licenses') }}" class="text-sm text-red-800 hover:text-red-900 font-semibold underline mt-2 inline-block">
+                        Go to Licenses →
                     </a>
                 </div>
             </div>
-            
+            {% endif %}
         </div>
-        
-        <!-- Right Column -->
-        <div class="col-md-6">
-            
-            <!-- Bot Logs -->
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">📋 Recent Logs</h5>
-                    <button class="btn btn-sm btn-outline-primary" onclick="location.reload()">
-                        🔄 Refresh
-                    </button>
-                </div>
-                <div class="card-body" style="max-height: 500px; overflow-y: auto;">
-                    {% if bot_logs %}
-                        <table class="table table-sm">
-                            <tbody>
-                                {% for log in bot_logs %}
-                                <tr>
-                                    <td style="white-space: nowrap;">
-                                        <small class="text-muted">{{ log.timestamp.strftime('%H:%M:%S') }}</small>
-                                    </td>
-                                    <td>
-                                        {% if log.level == 'error' %}
-                                            <span class="badge bg-danger">ERROR</span>
-                                        {% elif log.level == 'warning' %}
-                                            <span class="badge bg-warning">WARNING</span>
-                                        {% elif log.level == 'success' %}
-                                            <span class="badge bg-success">SUCCESS</span>
-                                        {% else %}
-                                            <span class="badge bg-info">INFO</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ log.message }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    {% else %}
-                        <p class="text-muted mb-0">No logs yet. Start the bot to see activity!</p>
-                    {% endif %}
-                </div>
+
+        <!-- Bot Control Card -->
+        <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-slate-900">Bot Control</h2>
+                {% if bot_config.is_running %}
+                <span class="px-3 py-1 text-sm font-semibold rounded-full bg-green-100 text-green-800 animate-pulse">
+                    ● Running
+                </span>
+                {% else %}
+                <span class="px-3 py-1 text-sm font-semibold rounded-full bg-gray-100 text-gray-800">
+                    ● Stopped
+                </span>
+                {% endif %}
             </div>
             
-            <!-- Quick Links -->
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">🔗 Quick Links</h5>
-                </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <a href="{{ url_for('dashboard.licenses') }}" class="btn btn-outline-primary">
-                            🎫 Manage Licenses
-                        </a>
-                        <a href="{{ url_for('dashboard.schedule') }}" class="btn btn-outline-info">
-                            📅 Bot Scheduler
-                        </a>
-                        <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-secondary">
-                            🚪 Logout
-                        </a>
+            {% if not bot_config.is_configured %}
+            <div class="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 mb-6">
+                <div class="flex items-start">
+                    <svg class="w-6 h-6 text-yellow-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-yellow-900">Bot Not Configured</p>
+                        <p class="text-sm text-yellow-700 mt-1">Please configure your VMOSCloud connection before starting the bot.</p>
                     </div>
                 </div>
             </div>
+            {% endif %}
             
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Configure Button -->
+                <a href="{{ url_for('dashboard.configure_bot') }}" 
+                   class="flex items-center justify-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    Configure
+                </a>
+                
+                <!-- Start Button -->
+                {% if not bot_config.is_running %}
+                <form method="POST" action="{{ url_for('dashboard.start_bot') }}" class="m-0">
+                    <button type="submit" 
+                            {% if not bot_config.is_configured or not subscription or not subscription.is_active %}disabled{% endif %}
+                            class="w-full flex items-center justify-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Start Bot
+                    </button>
+                </form>
+                {% else %}
+                <!-- Stop Button -->
+                <form method="POST" action="{{ url_for('dashboard.stop_bot') }}" class="m-0">
+                    <button type="submit" 
+                            class="w-full flex items-center justify-center px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/>
+                        </svg>
+                        Stop Bot
+                    </button>
+                </form>
+                {% endif %}
+                
+                <!-- View Logs Button -->
+                <button onclick="document.getElementById('bot-logs').scrollIntoView({behavior: 'smooth'})" 
+                        class="flex items-center justify-center px-6 py-3 bg-slate-600 hover:bg-slate-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    View Logs
+                </button>
+            </div>
+            
+            <!-- Bot Info -->
+            <div class="mt-6 grid grid-cols-2 gap-4 text-sm">
+                <div>
+                    <p class="text-slate-600">Last Started:</p>
+                    <p class="font-semibold text-slate-900">
+                        {% if bot_config.last_started %}
+                        {{ bot_config.last_started.strftime('%Y-%m-%d %H:%M') }}
+                        {% else %}
+                        Never
+                        {% endif %}
+                    </p>
+                </div>
+                <div>
+                    <p class="text-slate-600">Last Stopped:</p>
+                    <p class="font-semibold text-slate-900">
+                        {% if bot_config.last_stopped %}
+                        {{ bot_config.last_stopped.strftime('%Y-%m-%d %H:%M') }}
+                        {% else %}
+                        Never
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
         </div>
+        
+        <!-- Bot Logs -->
+        {% if bot_logs %}
+        <div id="bot-logs" class="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
+            <div class="px-6 py-4 border-b border-slate-200">
+                <h2 class="text-xl font-bold text-slate-900">Bot Logs</h2>
+            </div>
+            <div class="p-6 bg-slate-900 max-h-96 overflow-y-auto font-mono text-sm">
+                {% for log in bot_logs %}
+                <div class="mb-2 {% if log.log_type == 'error' %}text-red-400{% elif log.log_type == 'success' %}text-green-400{% elif log.log_type == 'warning' %}text-yellow-400{% else %}text-slate-300{% endif %}">
+                    <span class="text-slate-500">[{{ log.timestamp.strftime('%H:%M:%S') }}]</span>
+                    <span class="font-semibold">[{{ log.level.upper() }}]</span>
+                    {{ log.message }}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
     </div>
 </div>
-
-<!-- JavaScript for Live Timer -->
-{% if bot_config.is_running and bot_start_timestamp %}
-<script>
-    // Get bot start time from server
-    const botStartTime = {{ bot_start_timestamp }};
-    
-    function updateTimer() {
-        const now = Date.now();
-        const elapsed = Math.floor((now - botStartTime) / 1000); // seconds
-        
-        const hours = Math.floor(elapsed / 3600);
-        const minutes = Math.floor((elapsed % 3600) / 60);
-        const seconds = elapsed % 60;
-        
-        const timeString = 
-            String(hours).padStart(2, '0') + ':' +
-            String(minutes).padStart(2, '0') + ':' +
-            String(seconds).padStart(2, '0');
-        
-        document.getElementById('runningTimer').textContent = timeString;
-    }
-    
-    // Update every second
-    setInterval(updateTimer, 1000);
-    updateTimer(); // Initial call
-</script>
-{% elif bot_config.is_running %}
-<script>
-    // Fallback if no timestamp
-    document.getElementById('runningTimer').textContent = "Running...";
-</script>
-{% endif %}
 {% endblock %}

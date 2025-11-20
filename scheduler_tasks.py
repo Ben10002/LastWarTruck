@@ -2,11 +2,15 @@
 Background scheduler tasks for bot automation
 """
 from datetime import datetime, time as dt_time
+import pytz  # Neu hinzufügen
 from models import db
 from models.bot_config import BotConfig, BotTimer
 from models.bot_schedule import BotSchedule
 from models.user import User
 import threading
+
+# Deutsche Zeitzone
+TIMEZONE = pytz.timezone('Europe/Berlin')
 
 
 def check_schedules():
@@ -18,11 +22,12 @@ def check_schedules():
     app = create_app()
     
     with app.app_context():
-        now = datetime.now()
+        # Nutze deutsche Zeit
+        now = datetime.now(TIMEZONE)
         current_time = now.time()
         current_date = now.date()
         
-        print(f"[SCHEDULER] Checking schedules at {now.strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f"[SCHEDULER] Checking schedules at {now.strftime('%Y-%m-%d %H:%M:%S')} (Berlin)")
         
         # Get all active schedules
         schedules = BotSchedule.query.filter_by(is_active=True).all()

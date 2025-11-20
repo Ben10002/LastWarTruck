@@ -12,6 +12,9 @@ import threading
 # Deutsche Zeitzone
 TIMEZONE = pytz.timezone('Europe/Berlin')
 
+# Lock mechanism to prevent multiple starts
+_scheduler_locks = {}
+
 
 def check_schedules():
     """
@@ -26,6 +29,11 @@ def check_schedules():
         now = datetime.now(TIMEZONE)
         current_time = now.time()
         current_date = now.date()
+        current_second = now.second
+        
+        # Only check at second 0 (exact minute)
+        if current_second != 0:
+            return
         
         print(f"[SCHEDULER] Checking schedules at {now.strftime('%Y-%m-%d %H:%M:%S')} (Berlin)")
         
@@ -41,22 +49,27 @@ def check_schedules():
             if not bot_config:
                 continue
             
-            # Check if schedule matches current time (within 5 seconds window)
-            should_run = False
+            # Create lock key
+            lock_key = f"user_{user.id}_schedule_{schedule.id}"
             
-            # If specific date is set, check if it matches
+            # Check if specific date is set
             if schedule.scheduled_date:
                 if schedule.scheduled_date != current_date:
                     continue  # Wrong date
             
-            # Create datetime objects for comparison
-            schedule_start = datetime.combine(current_date, schedule.start_time)
-            schedule_end = datetime.combine(current_date, schedule.end_time)
-            current_datetime = datetime.combine(current_date, current_time)
+            # Check for start time (EXACT minute match)
+            start_hour = schedule.start_time.hour
+            start_minute = schedule.start_time.minute
             
-            # Check for start time (within 5 seconds window)
-            if (abs((current_datetime - schedule_start).total_seconds()) <= 5 and
+            if (current_time.hour == start_hour and 
+                current_time.minute == start_minute and
                 not bot_config.is_running):
+                
+                # Check if already started in this run
+                if lock_key in _scheduler_locks and _scheduler_locks[lock_key] == 'starting':
+                    continue
+                
+                _scheduler_locks[lock_key] = 'starting'
                 
                 print(f"[SCHEDULER] Starting bot for user {user.email} (schedule: {schedule.name})")
                 
@@ -70,15 +83,44 @@ def check_schedules():
                 
                 # Start bot
                 start_bot_for_user(user.id)
+                
+                # Clear lock after 10 seconds
+                def clear_lock():
+                    import time
+                    time.sleep(10)
+                    if lock_key in _scheduler_locks:
+                        del _scheduler_locks[lock_key]
+                
+                threading.Thread(target=clear_lock, daemon=True).start()
             
-            # Check for end time (within 5 seconds window)
-            if (abs((current_datetime - schedule_end).total_seconds()) <= 5 and
+            # Check for end time (EXACT minute match)
+            end_hour = schedule.end_time.hour
+            end_minute = schedule.end_time.minute
+            
+            if (current_time.hour == end_hour and 
+                current_time.minute == end_minute and
                 bot_config.is_running):
+                
+                # Check if already stopping in this run
+                stop_key = f"{lock_key}_stop"
+                if stop_key in _scheduler_locks and _scheduler_locks[stop_key] == 'stopping':
+                    continue
+                
+                _scheduler_locks[stop_key] = 'stopping'
                 
                 print(f"[SCHEDULER] Stopping bot for user {user.email} (schedule: {schedule.name})")
                 
                 # Stop bot
                 stop_bot_for_user(user.id)
+                
+                # Clear lock after 10 seconds
+                def clear_stop_lock():
+                    import time
+                    time.sleep(10)
+                    if stop_key in _scheduler_locks:
+                        del _scheduler_locks[stop_key]
+                
+                threading.Thread(target=clear_stop_lock, daemon=True).start()
 
 
 def start_bot_for_user(user_id):
@@ -87,6 +129,12 @@ def start_bot_for_user(user_id):
     app = create_app()
     
     with app.app_context():
+        # Check if already running
+        bot_config = BotConfig.query.filter_by(user_id=user_id).first()
+        if bot_config and bot_config.is_running:
+            print(f"[SCHEDULER] Bot already running for user {user_id}, skipping")
+            return
+        
         # Create new timer
         new_timer = BotTimer(user_id=user_id)
         db.session.add(new_timer)

@@ -53,8 +53,8 @@ class VMOSCloudBot:
         
         # OCR regions (L, top, R, bottom) for reading truck info
         self.OCR_REGIONS = {
-            'strength': (240, 970, 340, 1005),  # Moved further right to avoid icon
-            'server': (180, 870, 240, 910),  # Server number box
+            'strength': (200, 950, 320, 990),  # Moved up and left
+            'server': (160, 860, 240, 910),  # Server number box
         }
         
         # Remembered trucks (dict with timestamp)
@@ -249,7 +249,7 @@ class VMOSCloudBot:
             print(f"[DEBUG] Template match confidence: {max_val:.4f} (threshold: 0.50)")
             
             # Threshold (lowered for testing)
-            threshold = 0.50
+            threshold = 0.40
             if max_val >= threshold:
                 # Get center coordinates
                 h, w = template.shape[:2]

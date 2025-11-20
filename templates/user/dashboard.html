@@ -72,8 +72,8 @@
                         
                         <!-- Live Timer -->
                         <div class="mb-3">
-                            <strong>⏱️ Running Time:</strong>
-                            <span id="runningTimer" class="badge bg-primary" style="font-size: 1.1em;">00:00:00</span>
+                            <strong>⏱️ Status:</strong>
+                            <span id="runningTimer" class="badge bg-primary" style="font-size: 1.1em;">Running...</span>
                         </div>
                         
                         {% if bot_config.running_timer_enabled %}
@@ -210,39 +210,11 @@
     </div>
 </div>
 
-<!-- JavaScript for Live Timer -->
-{% if bot_config.is_running and bot_start_timestamp %}
+<!-- JavaScript for Live Timer - TEMPORARILY DISABLED -->
+{% if bot_config.is_running %}
 <script>
-    console.log("Bot start timestamp:", {{ bot_start_timestamp }});
-    
-    // Get bot start time from server
-    const botStartTime = {{ bot_start_timestamp }};
-    
-    function updateTimer() {
-        const now = Date.now();
-        const elapsed = Math.floor((now - botStartTime) / 1000); // seconds
-        
-        const hours = Math.floor(elapsed / 3600);
-        const minutes = Math.floor((elapsed % 3600) / 60);
-        const seconds = elapsed % 60;
-        
-        const timeString = 
-            String(hours).padStart(2, '0') + ':' +
-            String(minutes).padStart(2, '0') + ':' +
-            String(seconds).padStart(2, '0');
-        
-        document.getElementById('runningTimer').textContent = timeString;
-    }
-    
-    // Update every second
-    setInterval(updateTimer, 1000);
-    updateTimer(); // Initial call
-</script>
-{% elif bot_config.is_running %}
-<script>
-    // Fallback: Bot is running but no timestamp available
-    document.getElementById('runningTimer').textContent = "N/A";
-    console.log("Bot running but no timestamp");
+    // Simple static display
+    document.getElementById('runningTimer').textContent = "Running...";
 </script>
 {% endif %}
 {% endblock %}
